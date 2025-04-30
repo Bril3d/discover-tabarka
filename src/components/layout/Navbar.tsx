@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import DarkModeToggle from '@/components/ui/DarkModeToggle';
+import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,6 +35,8 @@ const Navbar = () => {
     { href: '/explore', label: 'Explore' },
     { href: '/locations', label: 'Locations' },
     { href: '/itineraries', label: 'Itineraries' },
+    { href: '/history', label: 'History' },
+    { href: '/blog', label: 'Blog' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/about', label: 'About' },
   ];
@@ -104,9 +106,9 @@ const Navbar = () => {
             </motion.div>
           ))}
 
-          {/* Dark Mode Toggle */}
+          {/* Theme Switcher */}
           <motion.div variants={itemVariants}>
-            <DarkModeToggle />
+            <ThemeSwitcher />
           </motion.div>
 
           {/* Auth Buttons */}
@@ -158,7 +160,7 @@ const Navbar = () => {
 
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center space-x-4">
-          <DarkModeToggle />
+          <ThemeSwitcher />
           <button 
             onClick={handleToggleMenu}
             aria-label="Toggle menu"
@@ -221,7 +223,7 @@ const Navbar = () => {
                     signOut();
                     setIsMenuOpen(false);
                   }}
-                  className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors"
+                  className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors text-center"
                 >
                   Sign Out
                 </button>

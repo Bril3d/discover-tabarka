@@ -29,7 +29,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-20 flex items-center justify-center h-full">
+      <div className="relative z-10 h-full flex items-center">
         <div className="container mx-auto px-4 text-center text-white">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -110,7 +110,7 @@ const HeroSection = () => {
       </div>
 
       {/* Wave overlay at bottom */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden z-10 pointer-events-none">
+      <div className="absolute bottom-0 left-0 right-0">
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           viewBox="0 0 1440 320" 

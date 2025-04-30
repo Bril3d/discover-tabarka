@@ -65,7 +65,7 @@ export default function Home() {
       <HeroSection />
       
       {/* Featured Posts Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white dark:bg-gray-950">
         <div className="container mx-auto">
           <motion.div
             className="text-center mb-16"
@@ -74,10 +74,10 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Featured <span className="text-tabarka-blue-600">Experiences</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              Featured <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Experiences</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Discover the best of what Tabarka has to offer through the eyes of travelers and locals alike.
             </p>
           </motion.div>
@@ -96,113 +96,106 @@ export default function Home() {
             ))}
           </motion.div>
           
-          <div className="mt-12 text-center">
-            <Link 
+          <motion.div
+            className="mt-12 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <Link
               href="/explore"
-              className="px-6 py-3 bg-tabarka-blue-600 text-white rounded-full font-medium hover:bg-tabarka-blue-700 transition-colors inline-flex items-center"
+              className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
             >
               View All Experiences
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 ml-2" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M17 8l4 4m0 0l-4 4m4-4H3" 
-                />
+              <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
       
-      {/* About Tabarka Section with Parallax Effect */}
-      <section className="relative py-20 bg-tabarka-blue-50 overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden z-0">
-          <div 
-            className="absolute inset-0 z-10"
-            style={{
-              backgroundImage: 'url(https://images.unsplash.com/photo-1566409358502-1fe56a505a43)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              opacity: 0.1
-            }}
-          ></div>
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <motion.div 
-              className="lg:w-1/2"
-              initial={{ opacity: 0, x: -50 }}
+      {/* Map Exploration Section */}
+      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.6 }}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Discover the Magic of <span className="text-tabarka-blue-600">Tabarka</span>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+                Explore Tabarka on the Map
               </h2>
-              <p className="text-gray-700 mb-6">
-                Tabarka is a coastal city located in northwestern Tunisia, known for its stunning beaches, vibrant coral reefs, and rich cultural heritage. Nestled between the Mediterranean Sea and the Kroumirie Mountains, this hidden gem offers a perfect blend of natural beauty and historical significance.
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Discover Tabarka's diverse attractions from pristine beaches and diving spots to historical landmarks and local restaurants, all accessible with our interactive map.
               </p>
-              <p className="text-gray-700 mb-6">
-                From diving in crystal-clear waters to exploring ancient Roman ruins, Tabarka provides a diverse range of experiences for every type of traveler. The city is also famous for its annual jazz festival, which attracts music lovers from around the world.
-              </p>
-              <Link 
-                href="/about"
-                className="inline-flex items-center text-tabarka-blue-600 font-medium hover:text-tabarka-blue-800 transition-colors"
+              <ul className="space-y-4 mb-8">
+                {[
+                  'Find the best diving spots with rich coral reefs',
+                  'Locate historical sites including the Genoese Fort',
+                  'Discover local restaurants serving authentic Tunisian cuisine',
+                  'Plan your beach day with detailed information on each location'
+                ].map((item, index) => (
+                  <motion.li
+                    key={index}
+                    className="flex items-start text-gray-700 dark:text-gray-300"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.3, delay: 0.1 * index }}
+                  >
+                    <svg className="h-6 w-6 text-tabarka-blue-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{item}</span>
+                  </motion.li>
+                ))}
+              </ul>
+              <Link
+                href="/locations"
+                className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
               >
-                Learn more about Tabarka
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5 ml-2" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M17 8l4 4m0 0l-4 4m4-4H3" 
-                  />
+                Explore Map
+                <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
             </motion.div>
             
-            <motion.div 
-              className="lg:w-1/2 relative"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+            <motion.div
+              className="relative rounded-xl overflow-hidden shadow-lg h-96 lg:h-[500px]"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="relative h-[500px] w-full overflow-hidden rounded-xl shadow-xl">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10"></div>
-                <Image
-                  src="https://images.unsplash.com/photo-1566409358502-1fe56a505a43"
-                  alt="Tabarka Coastal View"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                <div className="absolute bottom-6 left-6 z-20 text-white">
-                  <h3 className="text-2xl font-bold">Tabarka's Coastline</h3>
-                  <p>A perfect harmony of mountains meeting the sea</p>
+              <Image
+                src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce"
+                alt="Interactive map of Tabarka"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end">
+                <div className="p-6">
+                  <Link
+                    href="/locations"
+                    className="text-white font-medium hover:underline"
+                  >
+                    Open Interactive Map
+                  </Link>
                 </div>
               </div>
             </motion.div>
           </div>
         </div>
       </section>
-      
-      {/* Activities/Categories Section */}
-      <section className="py-20 px-4">
+
+      {/* History Timeline Preview */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-950">
         <div className="container mx-auto">
           <motion.div
             className="text-center mb-16"
@@ -211,164 +204,106 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Explore <span className="text-tabarka-blue-600">Tabarka</span> By Activity
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              Journey Through <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Time</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              From underwater adventures to cultural explorations, find the perfect activities for your visit.
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Explore Tabarka's rich history from ancient Phoenician settlements to modern-day cultural hub.
             </p>
           </motion.div>
           
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {[
-              { title: 'Diving & Snorkeling', icon: '🤿', color: 'bg-tabarka-blue-500', href: '/explore?category=diving' },
-              { title: 'Beach Relaxation', icon: '🏖️', color: 'bg-tabarka-sand-500', href: '/explore?category=beaches' },
-              { title: 'Historical Sites', icon: '🏛️', color: 'bg-tabarka-earth-500', href: '/explore?category=history' },
-              { title: 'Local Cuisine', icon: '🍽️', color: 'bg-tabarka-coral-500', href: '/explore?category=food' },
-            ].map((activity, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <Link href={activity.href}>
-                  <div className="bg-white rounded-xl shadow-md p-6 text-center hover:shadow-lg transition-shadow h-full flex flex-col items-center justify-center group">
-                    <div className={`w-16 h-16 ${activity.color} rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                      {activity.icon}
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2 group-hover:text-tabarka-blue-600 transition-colors">
-                      {activity.title}
-                    </h3>
-                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-sm text-white bg-tabarka-blue-600 px-3 py-1 rounded-full">
-                        Explore →
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-      
-      {/* Featured Itineraries Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Curated <span className="text-tabarka-blue-600">Itineraries</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Make the most of your visit with our custom-tailored travel plans for every type of traveler.
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {[
-              {
-                id: 'beach-lover',
-                title: "Beach Lover's Paradise",
-                days: 3,
-                image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-                interests: ["Beach", "Diving", "Food"]
-              },
-              {
-                id: 'history-culture',
-                title: "Historical & Cultural Journey",
-                days: 4,
-                image: "https://images.unsplash.com/photo-1555993539-1732b0258235",
-                interests: ["History", "Culture", "Food"]
-              },
-              {
-                id: 'nature-adventure',
-                title: "Nature & Adventure Explorer",
-                days: 5,
-                image: "https://images.unsplash.com/photo-1448375240586-882707db888b",
-                interests: ["Nature", "Diving", "Beach"]
-              }
-            ].map((itinerary) => (
-              <motion.div key={itinerary.id} variants={itemVariants}>
-                <Link href={`/itineraries/${itinerary.id}`} className="block h-full group">
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden h-full hover:shadow-lg transition-shadow duration-300">
-                    <div className="relative h-48">
+          <div className="relative">
+            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-tabarka-blue-100 dark:bg-tabarka-blue-900/30 rounded-full"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+              {[
+                {
+                  era: 'Ancient Times',
+                  year: '1100 BCE',
+                  title: 'Phoenician Settlement',
+                  description: 'Established as "Thabraca", a trading post for precious purple dye.',
+                  image: 'https://images.unsplash.com/photo-1555993539-1732b0258235'
+                },
+                {
+                  era: 'Roman Period',
+                  year: '146 BCE - 439 CE',
+                  title: 'Roman Expansion',
+                  description: 'Flourished as a Roman colony with significant infrastructure development.',
+                  image: 'https://images.unsplash.com/photo-1548812966-9a9983d5e309'
+                },
+                {
+                  era: 'Genoese Era',
+                  year: '1540 - 1741',
+                  title: 'Coral Trade Dominance',
+                  description: 'Genoese established a coral fishing settlement, building the iconic fortress.',
+                  image: 'https://images.unsplash.com/photo-1552406612-3bfff359cd4e'
+                },
+                {
+                  era: 'Modern Era',
+                  year: '1973 - Present',
+                  title: 'Cultural Renaissance',
+                  description: 'Launch of the Tabarka Jazz Festival puts the town on the global cultural map.',
+                  image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819'
+                }
+              ].map((event, index) => (
+                <motion.div
+                  key={index}
+                  className={`relative pb-12 ${index % 2 === 0 ? 'md:text-right md:pr-12' : 'md:pl-12 md:ml-auto'}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.1 * index }}
+                >
+                  <div className={`hidden md:block absolute top-0 h-6 w-6 rounded-full bg-tabarka-blue-500 ${
+                    index % 2 === 0 ? 'right-0 -translate-x-1/2' : 'left-0 translate-x-1/2'
+                  } -translate-y-1/2`}></div>
+                  
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
+                    <div className="relative h-48 overflow-hidden">
                       <Image
-                        src={itinerary.image}
-                        alt={itinerary.title}
+                        src={event.image}
+                        alt={event.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                      <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                        {event.year}
+                      </div>
                     </div>
                     <div className="p-5">
-                      <h3 className="text-xl font-semibold mb-2 group-hover:text-tabarka-blue-600 transition-colors">
-                        {itinerary.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {itinerary.interests.map((interest, i) => (
-                          <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                            {interest}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex justify-between items-center mt-auto">
-                        <span className="text-tabarka-blue-600 font-medium group-hover:underline flex items-center">
-                          View Itinerary
-                          <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                          </svg>
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {itinerary.days} {itinerary.days === 1 ? 'day' : 'days'}
-                        </span>
-                      </div>
+                      <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-tabarka-blue-100 dark:bg-tabarka-blue-900/30 text-tabarka-blue-800 dark:text-tabarka-blue-300 mb-2">
+                        {event.era}
+                      </span>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-300">{event.description}</p>
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
           
-          <div className="text-center mt-12">
-            <Link 
-              href="/itineraries"
-              className="px-6 py-3 bg-tabarka-blue-600 text-white rounded-full font-medium hover:bg-tabarka-blue-700 transition-colors inline-flex items-center"
+          <motion.div
+            className="mt-12 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <Link
+              href="/history"
+              className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
             >
-              Plan Your Perfect Trip
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 ml-2" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M17 8l4 4m0 0l-4 4m4-4H3" 
-                />
+              Explore Full Timeline
+              <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
-      
+
       {/* Call to Action */}
       <section className="py-20 px-4 bg-gradient-to-r from-tabarka-blue-600 to-tabarka-blue-800 text-white">
         <div className="container mx-auto text-center">

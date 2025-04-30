@@ -1,45 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 import { motion } from 'framer-motion';
 
 const DarkModeToggle = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleTheme, mounted } = useTheme();
 
-  // Initialize theme on component mount
-  useEffect(() => {
-    // Check local storage or system preference
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const handleToggle = () => {
-    if (isDarkMode) {
-      // Switch to light mode
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      // Switch to dark mode
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
+  // Skip rendering during SSR
+  if (!mounted) {
+    return <div className="w-16 h-8"></div>; // Placeholder to avoid layout shift
+  }
 
   return (
     <button 
-      onClick={handleToggle}
+      onClick={toggleTheme}
       className="relative h-8 w-16 rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-tabarka-blue-400 focus:ring-offset-2"
       aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+      role="switch"
+      aria-checked={isDarkMode}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          toggleTheme();
+          e.preventDefault();
+        }
+      }}
     >
       <motion.div 
         className="h-6 w-6 rounded-full bg-white shadow-md flex items-center justify-center"

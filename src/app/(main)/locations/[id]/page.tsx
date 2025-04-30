@@ -137,7 +137,7 @@ const mockLocationData: Record<string, Location> = {
   '6': {
     id: '6',
     name: 'Fort Tabarka',
-    description: 'Historical Genoese fort offering panoramic views of the harbor and city. Great for history enthusiasts. Built in the 16th century by the Republic of Genoa, this well-preserved fortress stands as a testament to Tabarka's strategic importance throughout the centuries. Visitors can explore the ancient walls, towers, and chambers while learning about the various civilizations that controlled this coastal region. The fort's elevated position provides spectacular views of the city, harbor, and Mediterranean Sea, making it a popular spot for photography.',
+    description: 'Historical Genoese fort offering panoramic views of the harbor and city. Great for history enthusiasts. Built in the 16th century by the Republic of Genoa, this well-preserved fortress stands as a testament to Tabarka\'s strategic importance throughout the centuries. Visitors can explore the ancient walls, towers, and chambers while learning about the various civilizations that controlled this coastal region. The fort\'s elevated position provides spectacular views of the city, harbor, and Mediterranean Sea, making it a popular spot for photography.',
     image: 'https://images.unsplash.com/photo-1552406612-3bfff359cd4e',
     category: 'historical',
     rating: 4.4,

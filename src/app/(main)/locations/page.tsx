@@ -5,6 +5,17 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the MapComponent with no SSR to avoid hydration issues
+const MapComponent = dynamic(() => import('@/components/features/MapComponent'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-[600px] w-full flex items-center justify-center bg-gray-100 rounded-xl">
+      <div className="animate-pulse text-gray-500">Loading Map...</div>
+    </div>
+  )
+});
 
 // Mock data - would be fetched from Supabase in production
 const locations = [
@@ -107,6 +118,7 @@ export default function LocationsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLocations, setFilteredLocations] = useState(locations);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   // Get initial category from URL if present
   useEffect(() => {
@@ -198,190 +210,210 @@ export default function LocationsPage() {
           className="mb-12"
         >
           <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search locations..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-tabarka-blue-500 focus:border-transparent"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              {/* Search Input */}
+              <div className="flex-1">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search locations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-tabarka-blue-500 focus:border-tabarka-blue-500 transition duration-150 ease-in-out"
+                  />
+                </div>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center justify-center">
+                <div className="bg-gray-100 p-1 rounded-lg flex">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-tabarka-blue-600 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                    aria-label="Grid view"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('map')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'map'
+                        ? 'bg-white text-tabarka-blue-600 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                    aria-label="Map view"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3l-6-3m12 6l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-800">Filter by Category:</h2>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-tabarka-blue-600 hover:text-tabarka-blue-800 text-sm font-medium"
-                >
-                  Clear Search
-                </button>
-              )}
-            </div>
-            
-            <div className="mt-4 flex flex-wrap gap-3">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                    selectedCategory === category.id
-                      ? 'bg-tabarka-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{category.icon}</span>
-                  <span>{category.name}</span>
-                </button>
-              ))}
+            {/* Categories */}
+            <div className="overflow-x-auto pb-2">
+              <div className="flex gap-2 min-w-max">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => handleCategoryChange(category.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center whitespace-nowrap ${
+                      selectedCategory === category.id
+                        ? 'bg-tabarka-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span className="mr-2">{category.icon}</span>
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Results */}
-        {filteredLocations.length > 0 ? (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {filteredLocations.map((location) => (
-              <motion.div key={location.id} variants={itemVariants}>
-                <Link href={`/locations/${location.id}`}>
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow h-full group">
-                    <div className="relative h-60 overflow-hidden">
-                      <Image
-                        src={location.image}
-                        alt={location.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-xl font-bold text-white">{location.name}</h3>
-                          <div className="bg-white/90 px-2 py-1 rounded-lg text-sm font-semibold text-tabarka-blue-700 flex items-center">
-                            <svg
-                              className="w-4 h-4 text-yellow-500 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                            </svg>
-                            {location.rating}
-                          </div>
-                        </div>
-                        <div className="mt-1">
-                          <span className="inline-block bg-tabarka-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                            {categories.find((cat) => cat.id === location.category)?.name || location.category}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <p className="text-gray-600 line-clamp-3">{location.description}</p>
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="text-tabarka-blue-600 font-medium flex items-center group-hover:underline">
-                          View Details
-                          <svg
-                            className="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M9 5l7 7-7 7"
-                            ></path>
-                          </svg>
-                        </div>
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <svg
-                            className="w-4 h-4 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            ></path>
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            ></path>
-                          </svg>
-                          Map Location
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
+        {/* View Toggle Content */}
+        {viewMode === 'map' ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white rounded-xl shadow-md p-12 text-center"
+            transition={{ duration: 0.5 }}
           >
-            <svg
-              className="w-16 h-16 mx-auto text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
-            <h3 className="text-xl font-semibold text-gray-700 mt-4">No locations found</h3>
-            <p className="text-gray-500 mt-2">
-              Try adjusting your search or filter criteria
-            </p>
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSearchQuery('');
-              }}
-              className="mt-6 px-4 py-2 bg-tabarka-blue-600 text-white rounded-lg hover:bg-tabarka-blue-700 transition-colors"
-            >
-              Clear All Filters
-            </button>
+            <MapComponent />
           </motion.div>
+        ) : (
+          <>
+            {/* Results Count */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="mb-6 text-gray-600"
+            >
+              Found <span className="font-semibold">{filteredLocations.length}</span> location{filteredLocations.length !== 1 ? 's' : ''}
+            </motion.div>
+
+            {/* Locations Grid */}
+            {filteredLocations.length > 0 ? (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {filteredLocations.map((location) => (
+                  <motion.div key={location.id} variants={itemVariants}>
+                    <Link href={`/locations/${location.id}`} className="block">
+                      <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow group h-full">
+                        <div className="relative h-48">
+                          <Image
+                            src={location.image}
+                            alt={location.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                          <div className="absolute top-4 right-4 z-10">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white text-gray-800">
+                              <svg 
+                                className="mr-1 h-4 w-4 text-yellow-500" 
+                                fill="currentColor" 
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              {location.rating}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="mb-1">
+                            <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full capitalize">
+                              {location.category}
+                            </span>
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-tabarka-blue-600 transition-colors">
+                            {location.name}
+                          </h3>
+                          <p className="text-gray-600 line-clamp-3 mb-4">
+                            {location.description}
+                          </p>
+                          <div className="flex justify-between items-center">
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <svg 
+                                className="h-4 w-4 mr-1" 
+                                fill="none" 
+                                viewBox="0 0 24 24" 
+                                stroke="currentColor"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" 
+                                />
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                                />
+                              </svg>
+                              View on map
+                            </div>
+                            <span className="inline-flex items-center text-tabarka-blue-600 font-medium">
+                              View details
+                              <svg 
+                                className="ml-1 h-4 w-4" 
+                                fill="none" 
+                                viewBox="0 0 24 24" 
+                                stroke="currentColor"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={2} 
+                                  d="M9 5l7 7-7 7" 
+                                />
+                              </svg>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-16"
+              >
+                <div className="text-gray-500 mb-4">
+                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-gray-900 mb-1">No locations found</h3>
+                <p className="text-gray-600">
+                  Try adjusting your search or filter to find what you're looking for.
+                </p>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
     </div>

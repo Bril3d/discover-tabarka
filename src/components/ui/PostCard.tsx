@@ -42,7 +42,7 @@ const PostCard = ({
 
   return (
     <motion.div
-      className="rounded-2xl overflow-hidden shadow-lg bg-white h-full"
+      className="rounded-2xl overflow-hidden shadow-lg bg-white dark:bg-gray-800 h-full"
       whileHover={{ 
         y: -10,
         transition: { duration: 0.3 }
@@ -54,7 +54,7 @@ const PostCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Media Section */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-56 overflow-hidden">
         {mediaType === 'image' && (
           <>
             <Image
@@ -154,19 +154,19 @@ const PostCard = ({
       {/* Content Section */}
       <div className="p-6">
         <Link href={`/posts/${id}`}>
-          <h3 className="text-xl font-bold mb-2 hover:text-tabarka-blue-600 transition-colors">
+          <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white hover:text-tabarka-blue-600 dark:hover:text-tabarka-blue-400 transition-colors">
             {title}
           </h3>
         </Link>
         
-        <p className="text-gray-600 mb-4 line-clamp-2">
+        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
           {excerpt}
         </p>
         
         {/* Author and Date */}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-tabarka-blue-100 mr-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-tabarka-blue-100 dark:bg-tabarka-blue-900/40 mr-2">
               {authorAvatar ? (
                 <Image 
                   src={authorAvatar} 
@@ -181,9 +181,9 @@ const PostCard = ({
                 </div>
               )}
             </div>
-            <span className="text-sm text-gray-600">{authorName}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">{authorName}</span>
           </div>
-          <span className="text-xs text-gray-500">{formatDate(createdAt)}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(createdAt)}</span>
         </div>
       </div>
     </motion.div>
