@@ -9,11 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select,
@@ -31,26 +28,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  FilePenLine,
-  ImageIcon,
-  MapPin,
-  Calendar,
-  Tag,
-  MessageSquare,
-  UploadCloud,
-  Save,
+  FilePenLine, MapPin,
+  Calendar, MessageSquare, Save,
   Plus,
   Eye,
   MoreHorizontal,
   Pencil,
   Trash,
   Copy,
-  Star,
-  Globe,
-  BookOpen,
-  ListChecks,
-  Camera,
-  Layout,
+  Star, BookOpen, Layout,
   Search
 } from 'lucide-react';
 
