@@ -11,8 +11,11 @@ import dynamic from 'next/dynamic';
 const MapComponent = dynamic(() => import('@/components/features/MapComponent'), { 
   ssr: false,
   loading: () => (
-    <div className="h-[600px] w-full flex items-center justify-center bg-gray-100 rounded-xl">
-      <div className="animate-pulse text-gray-500">Loading Map...</div>
+    <div className="h-[700px] w-full flex items-center justify-center bg-muted rounded-xl shadow-lg">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-muted-foreground">Loading interactive map...</div>
+      </div>
     </div>
   )
 });
@@ -187,15 +190,15 @@ export default function LocationsPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl font-bold text-gray-900 mb-4"
+            className="text-4xl font-bold text-foreground mb-4"
           >
-            Explore <span className="text-tabarka-blue-600">Tabarka's Treasures</span>
+            Explore <span className="text-primary">Tabarka's Treasures</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-gray-600 max-w-2xl mx-auto"
+            className="text-xl text-muted-foreground max-w-2xl mx-auto"
           >
             Discover the hidden gems of Tabarka, from pristine beaches and vibrant coral reefs
             to historical landmarks and scenic viewpoints.
@@ -224,20 +227,20 @@ export default function LocationsPage() {
                     placeholder="Search locations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-tabarka-blue-500 focus:border-tabarka-blue-500 transition duration-150 ease-in-out"
+                    className="block w-full pl-10 pr-3 py-2 border border-input rounded-md leading-5 bg-background placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
                   />
                 </div>
               </div>
 
               {/* View Mode Toggle */}
               <div className="flex items-center justify-center">
-                <div className="bg-gray-100 p-1 rounded-lg flex">
+                <div className="bg-muted p-1 rounded-lg flex">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       viewMode === 'grid'
-                        ? 'bg-white text-tabarka-blue-600 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'bg-background text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                     aria-label="Grid view"
                   >
@@ -249,13 +252,13 @@ export default function LocationsPage() {
                     onClick={() => setViewMode('map')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       viewMode === 'map'
-                        ? 'bg-white text-tabarka-blue-600 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'bg-background text-primary shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                     aria-label="Map view"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6-3l-6-3m12 6l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
                   </button>
                 </div>

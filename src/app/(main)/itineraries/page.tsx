@@ -1,9 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 type Interest = 'beach' | 'diving' | 'history' | 'nature' | 'food' | 'culture';
 
@@ -310,19 +315,11 @@ const predefinedItineraries: Itinerary[] = [
 ];
 
 export default function ItinerariesPage() {
-  const [duration, setDuration] = useState<number>(0);
   const [selectedInterests, setSelectedInterests] = useState<Interest[]>([]);
-  const [generatedItinerary, setGeneratedItinerary] = useState<Itinerary | null>(null);
-  const [showPreDefined, setShowPreDefined] = useState(true);
-
-  const interests: { value: Interest; label: string; icon: string }[] = [
-    { value: 'beach', label: 'Beaches & Swimming', icon: '🏖️' },
-    { value: 'diving', label: 'Diving & Snorkeling', icon: '🤿' },
-    { value: 'history', label: 'Historical Sites', icon: '🏛️' },
-    { value: 'nature', label: 'Nature & Hiking', icon: '🌳' },
-    { value: 'food', label: 'Food & Culinary', icon: '🍽️' },
-    { value: 'culture', label: 'Culture & Events', icon: '🎭' }
-  ];
+  const [duration, setDuration] = useState<number>(3);
+  const [generatedItineraries, setGeneratedItineraries] = useState<Itinerary[]>([]);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('predefined');
 
   const handleInterestToggle = (interest: Interest) => {
     if (selectedInterests.includes(interest)) {
@@ -332,78 +329,96 @@ export default function ItinerariesPage() {
     }
   };
 
+  const handleDurationChange = (values: number[]) => {
+    setDuration(values[0]);
+  };
+
   const handleGenerateItinerary = () => {
-    if (duration === 0 || selectedInterests.length === 0) {
+    if (selectedInterests.length === 0) {
+      // Show error or notification
       return;
     }
-    
-    // In a real app, this would call an API to generate a personalized itinerary
-    // For now, we'll simply find the closest matching predefined itinerary
 
-    let bestMatch: Itinerary | null = null;
-    let highestScore = -1;
+    setIsGenerating(true);
 
-    for (const itinerary of predefinedItineraries) {
-      // Calculate match score based on duration and interests
-      const durationDiff = Math.abs(itinerary.duration - duration);
-      const durationScore = 1 - (durationDiff / 5); // Normalize to [0,1]
-      
-      // Calculate interest overlap
-      const interestOverlap = itinerary.interests.filter(i => selectedInterests.includes(i)).length;
-      const interestScore = interestOverlap / Math.max(selectedInterests.length, itinerary.interests.length);
-      
-      // Combined score (weighted)
-      const totalScore = (durationScore * 0.4) + (interestScore * 0.6);
-      
-      if (totalScore > highestScore) {
-        highestScore = totalScore;
-        bestMatch = itinerary;
-      }
-    }
-
-    if (bestMatch) {
-      // Adjust days based on selected duration if needed
-      if (bestMatch.duration !== duration) {
-        const adjustedItinerary = {...bestMatch};
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      // Filter itineraries by matching interests and duration
+      const matchingItineraries = predefinedItineraries.filter(itinerary => {
+        // Check if duration matches or is within +/- 1 day
+        const durationMatch = Math.abs(itinerary.duration - duration) <= 1;
         
-        if (duration < bestMatch.duration) {
-          // Truncate days
-          adjustedItinerary.days = bestMatch.days.slice(0, duration);
-          adjustedItinerary.duration = duration;
-        } else if (duration > bestMatch.duration) {
-          // Add extra days by repeating last day with modifications
-          const extraDays = duration - bestMatch.duration;
-          const newDays = [...bestMatch.days];
-          
-          for (let i = 1; i <= extraDays; i++) {
-            const templateDay = bestMatch.days[bestMatch.days.length - 1];
-            const newDay = {
-              ...templateDay,
-              day: bestMatch.duration + i,
-              title: `Extra Day ${i}`,
-              description: `Additional day based on your interests.`
-            };
-            newDays.push(newDay);
-          }
-          
-          adjustedItinerary.days = newDays;
-          adjustedItinerary.duration = duration;
-        }
+        // Check if at least one selected interest matches
+        const interestsMatch = selectedInterests.some(interest => 
+          itinerary.interests.includes(interest)
+        );
         
-        setGeneratedItinerary(adjustedItinerary);
-      } else {
-        setGeneratedItinerary(bestMatch);
-      }
-    }
-    
-    setShowPreDefined(false);
+        return durationMatch && interestsMatch;
+      });
+
+      // Sort by number of matching interests (most matches first)
+      const sortedItineraries = [...matchingItineraries].sort((a, b) => {
+        const aMatches = a.interests.filter(interest => selectedInterests.includes(interest)).length;
+        const bMatches = b.interests.filter(interest => selectedInterests.includes(interest)).length;
+        return bMatches - aMatches;
+      });
+
+      setGeneratedItineraries(sortedItineraries);
+      setIsGenerating(false);
+    }, 1500);
   };
 
   const resetForm = () => {
-    setDuration(0);
     setSelectedInterests([]);
-    setGeneratedItinerary(null);
-    setShowPreDefined(true);
+    setDuration(3);
+    setGeneratedItineraries([]);
+  };
+
+  const getInterestColor = (interest: Interest) => {
+    switch (interest) {
+      case 'beach':
+        return 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600';
+      case 'diving':
+        return 'bg-sky-500 text-white border-sky-500 hover:bg-sky-600';
+      case 'history':
+        return 'bg-amber-700 text-white border-amber-700 hover:bg-amber-800';
+      case 'nature':
+        return 'bg-green-600 text-white border-green-600 hover:bg-green-700';
+      case 'food':
+        return 'bg-red-500 text-white border-red-500 hover:bg-red-600';
+      case 'culture':
+        return 'bg-purple-500 text-white border-purple-500 hover:bg-purple-600';
+      default:
+        return 'bg-primary text-primary-foreground border-primary hover:bg-primary/90';
+    }
+  };
+
+  const getInterestEmptyState = (interest: Interest) => {
+    switch (interest) {
+      case 'beach':
+        return 'border-amber-500 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20';
+      case 'diving':
+        return 'border-sky-500 text-sky-500 bg-sky-500/10 hover:bg-sky-500/20';
+      case 'history':
+        return 'border-amber-700 text-amber-700 bg-amber-700/10 hover:bg-amber-700/20';
+      case 'nature':
+        return 'border-green-600 text-green-600 bg-green-600/10 hover:bg-green-600/20';
+      case 'food':
+        return 'border-red-500 text-red-500 bg-red-500/10 hover:bg-red-500/20';
+      case 'culture':
+        return 'border-purple-500 text-purple-500 bg-purple-500/10 hover:bg-purple-500/20';
+      default:
+        return 'border-muted-foreground text-muted-foreground bg-transparent hover:bg-muted/15';
+    }
+  };
+
+  const interestIcons: Record<Interest, string> = {
+    beach: '🏖️',
+    diving: '🤿',
+    history: '🏛️',
+    nature: '🌳',
+    food: '🍽️',
+    culture: '🎭'
   };
 
   return (
@@ -416,266 +431,358 @@ export default function ItinerariesPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Plan Your <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Perfect Tabarka Itinerary</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Plan Your <span className="text-primary">Perfect Tabarka Trip</span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Discover personalized day-by-day plans for your Tabarka adventure, tailored to your interests and schedule.
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Discover curated itineraries tailored to your interests or create a custom journey to experience Tabarka's natural beauty, rich history, and vibrant culture.
           </p>
         </motion.div>
 
-        {/* Itinerary Generator */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 mb-16"
+        {/* Tabs */}
+        <Tabs 
+          defaultValue="predefined" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="mb-16"
         >
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6">Create Your Custom Itinerary</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">How many days will you stay?</h3>
-              <div className="flex flex-wrap gap-3">
-                {[1, 2, 3, 4, 5, 7].map((days) => (
-                  <button
-                    key={days}
-                    onClick={() => setDuration(days)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      duration === days
-                        ? 'bg-tabarka-blue-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    {days} {days === 1 ? 'day' : 'days'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">What are you interested in?</h3>
-              <div className="flex flex-wrap gap-3">
-                {interests.map((interest) => (
-                  <button
-                    key={interest.value}
-                    onClick={() => handleInterestToggle(interest.value)}
-                    className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
-                      selectedInterests.includes(interest.value)
-                        ? 'bg-tabarka-blue-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <span>{interest.icon}</span>
-                    <span>{interest.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-            <button
-              onClick={handleGenerateItinerary}
-              disabled={duration === 0 || selectedInterests.length === 0}
-              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                duration === 0 || selectedInterests.length === 0
-                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  : 'bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white'
-              }`}
-            >
-              Generate My Itinerary
-            </button>
-            
-            {(duration !== 0 || selectedInterests.length !== 0) && (
-              <button
-                onClick={resetForm}
-                className="px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger 
+                value="predefined"
+                className="relative data-[state=active]:text-primary"
               >
-                Reset
-              </button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Generated Itinerary */}
-        {generatedItinerary && !showPreDefined && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="mb-16"
-          >
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
-              <div className="relative h-80">
-                <Image
-                  src={generatedItinerary.image}
-                  alt={generatedItinerary.title}
-                  fill
-                  priority
-                  sizes="(max-width: 1200px) 100vw, 1200px"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-8 w-full">
-                  <h2 className="text-3xl font-bold text-white dark:text-gray-100 mb-2">{generatedItinerary.title}</h2>
-                  <p className="text-white dark:text-gray-300 text-lg mb-4">{generatedItinerary.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {generatedItinerary.interests.map((interest) => (
-                      <span 
-                        key={interest} 
-                        className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm"
-                      >
-                        {interests.find(i => i.value === interest)?.icon} {interests.find(i => i.value === interest)?.label}
-                      </span>
-                    ))}
-                    <span className="bg-tabarka-blue-500 text-white px-3 py-1 rounded-full text-sm">
-                      {generatedItinerary.duration} {generatedItinerary.duration === 1 ? 'day' : 'days'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
-                  <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Your Personalized Itinerary</h3>
-                  <p className="text-gray-600 dark:text-gray-300 mt-1">Day by day guide to make the most of your Tabarka visit</p>
-                </div>
-                
-                <div className="space-y-8">
-                  {generatedItinerary.days.map((day) => (
-                    <div key={day.day} className="border-l-4 border-tabarka-blue-500 pl-6 py-2">
-                      <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Day {day.day}: {day.title}</h4>
-                      <p className="text-gray-600 dark:text-gray-300 mb-4">{day.description}</p>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {day.locations.map((location, idx) => (
-                          <Link 
-                            key={`${location.id}-${idx}`}
-                            href={`/locations/${location.id}`}
-                            className="flex bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow group"
-                          >
-                            <div className="relative h-24 w-24 flex-shrink-0">
-                              <Image
-                                src={location.image}
-                                alt={location.name}
-                                fill
-                                sizes="96px"
-                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                            <div className="p-3 flex-1">
-                              <h5 className="font-medium text-gray-900 dark:text-gray-100 group-hover:text-tabarka-blue-600 transition-colors">{location.name}</h5>
-                              <div className="flex justify-between items-center mt-1">
-                                <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
-                                  {location.category.charAt(0).toUpperCase() + location.category.slice(1)}
-                                </span>
-                                <span className="text-sm text-tabarka-blue-600">{location.timeSpent}</span>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-8 flex justify-center">
-                  <button
-                    onClick={() => setShowPreDefined(true)}
-                    className="px-6 py-3 rounded-lg font-medium bg-tabarka-blue-50 dark:bg-tabarka-blue-900/30 text-tabarka-blue-600 dark:text-tabarka-blue-400 hover:bg-tabarka-blue-100 dark:hover:bg-tabarka-blue-900/50 transition-colors"
+                <span className="flex items-center gap-2">
+                  <svg 
+                    className="w-5 h-5" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
                   >
-                    Browse Other Itineraries
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Suggested Itineraries
+                </span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="custom"
+                className="relative data-[state=active]:text-primary"
+              >
+                <span className="flex items-center gap-2">
+                  <svg 
+                    className="w-5 h-5" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Create Custom
+                </span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        {/* Predefined Itineraries */}
-        {showPreDefined && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-8 text-center">Or Explore Our Recommended Itineraries</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {predefinedItineraries.map((itinerary) => (
+          <TabsContent value="predefined" className="mt-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {predefinedItineraries.map((itinerary, index) => (
                 <motion.div
                   key={itinerary.id}
-                  whileHover={{ y: -5 }}
-                  className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    transition: { 
+                      duration: 0.5,
+                      delay: index * 0.1
+                    }
+                  }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  className="h-full"
                 >
-                  <div className="relative h-48">
-                    <Image
-                      src={itinerary.image}
-                      alt={itinerary.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-xl font-bold text-white">{itinerary.title}</h3>
-                      <div className="flex items-center mt-1 space-x-2">
-                        <span className="bg-white/90 text-tabarka-blue-700 text-xs px-2 py-1 rounded-full font-medium">
-                          {itinerary.duration} {itinerary.duration === 1 ? 'day' : 'days'}
-                        </span>
-                        {itinerary.interests.slice(0, 2).map((interest) => (
-                          <span 
-                            key={interest}
-                            className="bg-tabarka-blue-500/90 text-white text-xs px-2 py-1 rounded-full"
+                  <Card className="h-full flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-all bg-card dark:bg-card">
+                    <div className="relative h-52 overflow-hidden">
+                      <Image
+                        src={itinerary.image}
+                        alt={itinerary.title}
+                        fill
+                        className="object-cover transition-transform duration-500 hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                      
+                      <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-white text-xs font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {itinerary.duration} {itinerary.duration === 1 ? 'day' : 'days'}
+                      </div>
+                    </div>
+                    
+                    <CardHeader className="pb-2">
+                      <div className="flex gap-1.5 flex-wrap mb-2">
+                        {itinerary.interests.map((interest) => (
+                          <Badge 
+                            key={interest} 
+                            variant="secondary"
+                            className={getInterestEmptyState(interest)}
                           >
-                            {interests.find(i => i.value === interest)?.icon}
-                          </span>
+                            {interestIcons[interest]} {interest}
+                          </Badge>
                         ))}
-                        {itinerary.interests.length > 2 && (
-                          <span className="bg-tabarka-blue-500/90 text-white text-xs px-2 py-1 rounded-full">
-                            +{itinerary.interests.length - 2}
-                          </span>
-                        )}
+                      </div>
+                      <h3 className="text-xl font-bold text-foreground leading-tight">{itinerary.title}</h3>
+                    </CardHeader>
+                    
+                    <CardContent className="py-2 flex-grow">
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {itinerary.description}
+                      </p>
+                    </CardContent>
+                    
+                    <CardFooter className="pt-2">
+                      <Button asChild className="w-full group">
+                        <Link href={`/itineraries/${itinerary.id}`} className="flex items-center justify-center">
+                          View Itinerary
+                          <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="custom" className="mt-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Card className="overflow-hidden shadow-md bg-card dark:bg-card">
+                <CardHeader>
+                  <h2 className="text-2xl font-bold text-foreground">Customize Your Itinerary</h2>
+                  <p className="text-muted-foreground">
+                    Tell us what you're interested in and how long you're staying, and we'll suggest the perfect itinerary.
+                  </p>
+                </CardHeader>
+                
+                <CardContent className="space-y-8">
+                  {/* Interests Selection */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">What are you interested in?</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {['beach', 'diving', 'history', 'nature', 'food', 'culture'].map((interest) => (
+                        <motion.button
+                          key={interest}
+                          onClick={() => handleInterestToggle(interest as Interest)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className={`px-4 py-3 rounded-full text-sm font-medium border-2 transition-all duration-200 flex items-center space-x-2 ${
+                            selectedInterests.includes(interest as Interest)
+                              ? getInterestColor(interest as Interest)
+                              : getInterestEmptyState(interest as Interest)
+                          }`}
+                        >
+                          <span className="text-lg">{interestIcons[interest as Interest]}</span>
+                          <span>{interest.charAt(0).toUpperCase() + interest.slice(1)}</span>
+                          
+                          {selectedInterests.includes(interest as Interest) && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="ml-1 w-5 h-5 rounded-full bg-white flex items-center justify-center"
+                            >
+                              <svg className="w-3 h-3 text-current" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </motion.span>
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Select at least one interest to generate recommendations.
+                    </p>
+                  </div>
+                  
+                  {/* Duration Selection */}
+                  <div>
+                    <div className="flex flex-wrap justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-foreground">Trip Duration</h3>
+                      <motion.span 
+                        key={duration}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {duration} {duration === 1 ? 'day' : 'days'}
+                      </motion.span>
+                    </div>
+                    <div className="px-3 py-5">
+                      <Slider
+                        defaultValue={[duration]}
+                        max={7}
+                        min={1}
+                        step={1}
+                        onValueChange={handleDurationChange}
+                        className="py-2"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <span>1 day</span>
+                        <span>7 days</span>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="p-5">
-                    <p className="text-gray-600 dark:text-gray-300 line-clamp-3 mb-4">{itinerary.description}</p>
-                    <Link
-                      href={`/itineraries/${itinerary.id}`}
-                      className="w-full bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors block text-center"
-                    >
-                      View Itinerary
-                    </Link>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-        
-        {/* Call to Action */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-16 bg-tabarka-blue-50 dark:bg-tabarka-blue-900/20 rounded-xl p-8 text-center shadow-sm"
-        >
-          <h2 className="text-2xl font-bold text-tabarka-blue-800 dark:text-tabarka-blue-300 mb-4">Ready to Explore Tabarka?</h2>
-          <p className="text-tabarka-blue-600 dark:text-tabarka-blue-400 max-w-2xl mx-auto mb-6">
-            Save your itinerary, book accommodations, or explore specific locations to make your Tabarka experience unforgettable.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/locations" className="bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
-              Explore Locations
-            </Link>
-            <Link href="/submit" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-tabarka-blue-600 dark:text-tabarka-blue-400 border border-tabarka-blue-200 dark:border-tabarka-blue-800 font-medium py-3 px-6 rounded-lg transition-colors">
-              Share Your Experience
-            </Link>
-          </div>
-        </motion.div>
+                </CardContent>
+                
+                <CardFooter className="flex flex-col sm:flex-row gap-4 border-t border-border pt-6">
+                  <Button 
+                    onClick={handleGenerateItinerary} 
+                    disabled={selectedInterests.length === 0 || isGenerating}
+                    className="flex-1 h-12"
+                    size="lg"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating Your Perfect Itinerary...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        Generate Itinerary
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={resetForm} 
+                    variant="outline"
+                    disabled={selectedInterests.length === 0 && duration === 3}
+                    className="sm:flex-none"
+                  >
+                    Reset
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              {/* Generated Itineraries */}
+              <AnimatePresence>
+                {generatedItineraries.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="mt-10"
+                  >
+                    <div className="flex items-center mb-6 gap-3">
+                      <div className="h-px flex-grow bg-border"></div>
+                      <h3 className="text-xl font-bold text-foreground px-4">
+                        Recommended For You
+                      </h3>
+                      <div className="h-px flex-grow bg-border"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {generatedItineraries.map((itinerary, index) => (
+                        <motion.div
+                          key={itinerary.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <Card className="overflow-hidden hover:shadow-md transition-all duration-300 h-full flex flex-col">
+                            <div className="flex md:flex-row flex-col h-full">
+                              <div className="md:w-1/3 relative">
+                                <Image
+                                  src={itinerary.image}
+                                  alt={itinerary.title}
+                                  className="object-cover"
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, 33vw"
+                                />
+                                <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5 text-white text-xs">
+                                  {itinerary.duration} {itinerary.duration === 1 ? 'day' : 'days'}
+                                </div>
+                              </div>
+                              
+                              <div className="flex-1 p-5 flex flex-col">
+                                <h4 className="text-lg font-semibold text-foreground mb-2">{itinerary.title}</h4>
+                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-grow">{itinerary.description}</p>
+                                
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {itinerary.interests.map((interest) => (
+                                      <Badge 
+                                        key={interest} 
+                                        variant="outline"
+                                        className={
+                                          selectedInterests.includes(interest) 
+                                            ? getInterestColor(interest) 
+                                            : getInterestEmptyState(interest)
+                                        }
+                                      >
+                                        {interestIcons[interest]}
+                                        <span className="ml-1">{interest}</span>
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                  
+                                  <Button variant="default" asChild size="sm" className="w-full group">
+                                    <Link href={`/itineraries/${itinerary.id}`}>
+                                      View Details
+                                      <svg className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" stroke="currentColor"/>
+                                      </svg>
+                                    </Link>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </div>
+                    
+                    {generatedItineraries.length === 0 && (
+                      <Card className="p-8 text-center">
+                        <div className="flex flex-col items-center">
+                          <div className="rounded-full bg-muted p-3 mb-4">
+                            <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h4 className="text-lg font-semibold text-foreground mb-2">No matching itineraries found</h4>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            Try selecting different interests or adjusting your trip duration to find the perfect itinerary.
+                          </p>
+                        </div>
+                      </Card>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

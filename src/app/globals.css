@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+button {
+  cursor: pointer;
+}
 
 @layer base {
   :root {

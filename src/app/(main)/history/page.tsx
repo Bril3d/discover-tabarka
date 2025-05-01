@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import TimelineComponent from '@/components/features/TimelineComponent';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 
 export default function HistoryPage() {
   return (
@@ -16,10 +19,10 @@ export default function HistoryPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Discover <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Tabarka's Rich History</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Discover <span className="text-primary">Tabarka's Rich History</span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             From ancient Phoenician roots to modern-day tourism destination, explore the fascinating journey of this coastal gem through the centuries.
           </p>
         </motion.div>
@@ -29,17 +32,17 @@ export default function HistoryPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden mb-16"
+          className="bg-card dark:bg-card rounded-xl shadow-md overflow-hidden mb-16"
         >
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="p-6 md:p-8 flex flex-col justify-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-2xl font-bold text-foreground mb-4">
                 A Crossroads of Civilizations
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Nestled between the Mediterranean Sea and the Kroumirie Mountains, Tabarka has been a strategic location and cultural melting pot for thousands of years. Its natural harbor and rich resources attracted settlers and traders from across the Mediterranean.
               </p>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 From Phoenician traders to Roman settlers, from Genoese coral fishers to Ottoman rulers, each civilization has left its mark on this beautiful coastal town, creating a uniquely rich historical tapestry that continues to fascinate visitors today.
               </p>
             </div>
@@ -67,9 +70,12 @@ export default function HistoryPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mb-16"
         >
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
-            Explore Tabarka Through The Ages
-          </h2>
+          <div className="flex items-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+              Explore Tabarka Through The Ages
+            </h2>
+            <div className="ml-4 h-px bg-border flex-grow hidden md:block"></div>
+          </div>
           <TimelineComponent />
         </motion.div>
         
@@ -78,16 +84,17 @@ export default function HistoryPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="bg-tabarka-blue-50 dark:bg-tabarka-blue-900/20 rounded-xl p-6 md:p-8 mb-16"
+          className="mb-16"
         >
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3">
-              Visit Historical Sites in Tabarka
+          <div className="flex items-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+              Visit Historical Sites
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Experience Tabarka's history firsthand by visiting these remarkable historical landmarks, each telling a unique chapter of the region's story.
-            </p>
+            <div className="ml-4 h-px bg-border flex-grow hidden md:block"></div>
           </div>
+          <p className="text-muted-foreground max-w-3xl mb-8">
+            Experience Tabarka's history firsthand by visiting these remarkable historical landmarks, each telling a unique chapter of the region's story.
+          </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -115,33 +122,41 @@ export default function HistoryPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 + (index * 0.1) }}
-                className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden"
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
               >
-                <div className="relative h-48 overflow-hidden">
-                  <Image
-                    src={site.image}
-                    alt={site.title}
-                    fill
-                    className="object-cover transition-transform duration-300 hover:scale-110"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                  <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                    {site.period}
+                <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-all h-full">
+                  <div className="relative h-48">
+                    <Image
+                      src={site.image}
+                      alt={site.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                    <div className="absolute top-3 right-3 z-10">
+                      <Badge className="bg-primary text-primary-foreground">
+                        {site.period}
+                      </Badge>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                      <h3 className="text-xl font-bold mb-1">{site.title}</h3>
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{site.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">{site.description}</p>
-                  <Link 
-                    href={`/locations?category=historical`}
-                    className="inline-flex items-center text-sm font-medium text-tabarka-blue-600 dark:text-tabarka-blue-400 hover:text-tabarka-blue-800 dark:hover:text-tabarka-blue-300 transition-colors"
-                  >
-                    View Details
-                    <svg className="ml-1 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
+                  <CardContent className="py-4">
+                    <p className="text-muted-foreground text-sm">{site.description}</p>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button variant="link" asChild className="px-0 text-primary group">
+                      <Link href={`/locations?category=historical`} className="flex items-center">
+                        View Details
+                        <svg className="ml-1 w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -152,23 +167,26 @@ export default function HistoryPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center"
+          className="text-center bg-muted rounded-xl p-8 md:p-12"
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Share Your Historical Discoveries
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-6">
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
             Have you visited a historical site in Tabarka or uncovered information about its past? Share your photos, stories, and findings with our community.
           </p>
-          <Link
-            href="/submit"
-            className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
+          <Button
+            size="lg"
+            className="group"
+            asChild
           >
-            Submit Your Discovery
-            <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </Link>
+            <Link href="/submit" className="inline-flex items-center">
+              Submit Your Discovery
+              <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </Button>
         </motion.div>
       </div>
     </div>

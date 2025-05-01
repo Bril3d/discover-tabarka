@@ -3,7 +3,6 @@
 import * as React from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Card } from "@/components/ui/card";
 
 export interface AnimatedCardProps extends Omit<HTMLMotionProps<"div">, "style" | "variants" | "transition" | "initial" | "whileHover" | "whileTap"> {
   /**
@@ -91,29 +90,27 @@ const AnimatedCard = ({
   };
   
   return (
-    <Card asChild>
-      <motion.div
-        className={cn(
-          "border border-border rounded-lg overflow-hidden transition-colors",
-          withColorBg && `bg-tabarka-${glowColor}-${colorIntensity}`,
-          className
-        )}
-        whileHover={{
-          scale: hoverScale,
-          boxShadow: withGlow 
-            ? getGlowShadow() 
-            : withLift 
-              ? getLiftShadow() 
-              : undefined,
-          y: withLift ? -5 : 0,
-        }}
-        whileTap={{ scale: tapScale }}
-        transition={{ duration }}
-        {...props}
-      >
-        {children}
-      </motion.div>
-    </Card>
+    <motion.div
+      className={cn(
+        "border border-border rounded-lg overflow-hidden transition-colors bg-card text-card-foreground shadow-sm",
+        withColorBg && `bg-tabarka-${glowColor}-${colorIntensity}`,
+        className
+      )}
+      whileHover={{
+        scale: hoverScale,
+        boxShadow: withGlow 
+          ? getGlowShadow() 
+          : withLift 
+            ? getLiftShadow() 
+            : undefined,
+        y: withLift ? -5 : 0,
+      }}
+      whileTap={{ scale: tapScale }}
+      transition={{ duration }}
+      {...props}
+    >
+      {children}
+    </motion.div>
   );
 };
 

@@ -4,9 +4,9 @@ import HeroSection from '@/components/features/HeroSection';
 import PostCard from '@/components/ui/PostCard';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { AnimatedButton } from '@/components/ui/animated-button';
-import { AnimatedSection } from '@/components/ui/animated-section';
+import { motion, useInView, Variants } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { useState, useRef, ReactNode } from 'react';
 
 // Mock data for featured posts - would be fetched from Supabase in production
 const featuredPosts = [
@@ -46,52 +46,67 @@ const featuredPosts = [
 ];
 
 // Animation variants
-const containerVariants = {
+const fadeIn: Variants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
+  visible: { opacity: 1, transition: { duration: 0.6 } }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
-
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 }
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
-    }
-  }
-};
-
-const slideInLeft = {
+const slideInLeft: Variants = {
   hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0 }
+  visible: { opacity: 1, x: 0, transition: { duration: 0.6 } }
 };
 
-const slideInRight = {
+const slideInRight: Variants = {
   hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0 }
+  visible: { opacity: 1, x: 0, transition: { duration: 0.6 } }
 };
 
-const slideUp = {
+const slideUp: Variants = {
   hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0 }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+// Types for the animated container
+interface AnimatedContainerProps {
+  children: ReactNode;
+  className?: string;
+  variants: Variants;
+  delay?: number;
+  threshold?: number;
+}
+
+// Animated section component that handles intersection observer
+const AnimatedContainer = ({ 
+  children, 
+  className = "", 
+  variants, 
+  delay = 0, 
+  threshold = 0.1 
+}: AnimatedContainerProps) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: threshold });
+  
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={variants}
+      className={className}
+      transition={{ delay }}
+    >
+      {children}
+    </motion.div>
+  );
 };
 
 export default function Home() {
+  const [activeFilter, setActiveFilter] = useState<string>('all');
+  
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+  };
+  
   return (
     <>
       <HeroSection />
@@ -99,7 +114,7 @@ export default function Home() {
       {/* Featured Posts Section */}
       <section className="py-20 px-4 bg-background">
         <div className="container mx-auto">
-          <AnimatedSection 
+          <AnimatedContainer 
             className="text-center mb-16"
             variants={fadeIn}
             threshold={0.1}
@@ -110,37 +125,59 @@ export default function Home() {
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Discover the best of what Tabarka has to offer through the eyes of travelers and locals alike.
             </p>
-          </AnimatedSection>
+            
+            {/* Category filter buttons */}
+            <div className="flex flex-wrap justify-center gap-2 mt-8">
+              {['all', 'diving', 'history', 'beaches', 'food'].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => handleFilterChange(filter)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                    activeFilter === filter
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-muted hover:bg-muted/80 text-foreground'
+                  }`}
+                >
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                </button>
+              ))}
+            </div>
+          </AnimatedContainer>
           
-          <AnimatedSection 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            variants={staggerContainer}
-            threshold={0.1}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredPosts.map((post, index) => (
-              <motion.div key={post.id} variants={index % 2 === 0 ? slideInLeft : slideUp}>
+              <motion.div 
+                key={post.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.5,
+                  delay: index * 0.1 + 0.2
+                }}
+              >
                 <PostCard {...post} />
               </motion.div>
             ))}
-          </AnimatedSection>
+          </div>
           
-          <AnimatedSection
+          <AnimatedContainer
             className="mt-12 text-center"
             variants={fadeIn}
             delay={0.4}
           >
-            <AnimatedButton
-              asChild
+            <Button
               size="lg"
+              asChild
+              className="group"
             >
               <Link href="/explore" className="inline-flex items-center">
                 View All Experiences
-                <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </Link>
-            </AnimatedButton>
-          </AnimatedSection>
+            </Button>
+          </AnimatedContainer>
         </div>
       </section>
       
@@ -148,7 +185,8 @@ export default function Home() {
       <section className="py-20 px-4 bg-muted/50">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <AnimatedSection
+            <AnimatedContainer
+              className="space-y-6"
               variants={slideInLeft}
               threshold={0.1}
             >
@@ -180,17 +218,17 @@ export default function Home() {
                   </motion.li>
                 ))}
               </ul>
-              <AnimatedButton asChild>
+              <Button asChild className="group">
                 <Link href="/locations" className="inline-flex items-center">
                   Explore Map
-                  <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
-              </AnimatedButton>
-            </AnimatedSection>
+              </Button>
+            </AnimatedContainer>
             
-            <AnimatedSection
+            <AnimatedContainer
               className="relative rounded-xl overflow-hidden shadow-lg h-96 lg:h-[500px]"
               variants={slideInRight}
               threshold={0.1}
@@ -213,7 +251,7 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-            </AnimatedSection>
+            </AnimatedContainer>
           </div>
         </div>
       </section>
@@ -221,14 +259,14 @@ export default function Home() {
       {/* History Timeline Preview */}
       <section className="py-20 px-4 bg-background">
         <div className="container mx-auto">
-          <AnimatedSection className="text-center mb-16" variants={fadeIn}>
+          <AnimatedContainer className="text-center mb-16" variants={fadeIn}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
               Discover <span className="text-primary">Tabarka's History</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               From ancient Phoenician outpost to modern tourist destination, explore the rich historical timeline of this Mediterranean jewel.
             </p>
-          </AnimatedSection>
+          </AnimatedContainer>
           
           {/* Timeline Items (simplified for this example) */}
           <div className="relative mt-12 max-w-4xl mx-auto">
@@ -258,7 +296,7 @@ export default function Home() {
                 description: "Tabarka was conquered by the Bey of Tunis, ending the Genoese presence."
               }
             ].map((item, index) => (
-              <AnimatedSection
+              <AnimatedContainer
                 key={index}
                 className={`relative flex items-center mb-12 ${
                   index % 2 === 0 ? "justify-start" : "justify-end"
@@ -267,7 +305,7 @@ export default function Home() {
                 delay={0.2 * index}
               >
                 <div className={`w-5/12 ${index % 2 === 1 ? "order-1" : ""}`}>
-                  <div className="bg-card p-6 rounded-lg shadow-md">
+                  <div className="bg-card p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                     <span className="text-primary font-bold">{item.year}</span>
                     <h3 className="text-xl font-semibold mt-1">{item.title}</h3>
                     <p className="text-muted-foreground mt-2">{item.description}</p>
@@ -276,30 +314,30 @@ export default function Home() {
                 <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
                   <div className="w-4 h-4 rounded-full bg-primary z-10"></div>
                 </div>
-              </AnimatedSection>
+              </AnimatedContainer>
             ))}
           </div>
           
-          <AnimatedSection className="text-center mt-12" variants={fadeIn}>
-            <AnimatedButton asChild size="lg">
+          <AnimatedContainer className="text-center mt-12" variants={fadeIn}>
+            <Button asChild size="lg">
               <Link href="/history">
                 Explore Full Timeline
               </Link>
-            </AnimatedButton>
-          </AnimatedSection>
+            </Button>
+          </AnimatedContainer>
         </div>
       </section>
 
       {/* Call to Action */}
       <section className="py-24 px-4 bg-primary text-primary-foreground">
         <div className="container mx-auto">
-          <AnimatedSection className="max-w-3xl mx-auto text-center space-y-6" variants={fadeIn}>
+          <AnimatedContainer className="max-w-3xl mx-auto text-center space-y-6" variants={fadeIn}>
             <h2 className="text-3xl md:text-5xl font-bold">Ready to Discover Tabarka?</h2>
             <p className="text-primary-foreground/90 text-lg">
               Plan your journey to one of Tunisia's most beautiful coastal destinations. Immerse yourself in culture, history, and natural beauty.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-              <AnimatedButton 
+              <Button 
                 variant="secondary" 
                 size="lg"
                 asChild
@@ -307,8 +345,8 @@ export default function Home() {
                 <Link href="/itineraries">
                   View Itineraries
                 </Link>
-              </AnimatedButton>
-              <AnimatedButton 
+              </Button>
+              <Button 
                 variant="outline" 
                 size="lg" 
                 className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/20"
@@ -317,9 +355,93 @@ export default function Home() {
                 <Link href="/contact">
                   Contact Us
                 </Link>
-              </AnimatedButton>
+              </Button>
             </div>
-          </AnimatedSection>
+          </AnimatedContainer>
+        </div>
+      </section>
+      
+      {/* Testimonial Section */}
+      <section className="py-20 px-4 bg-background">
+        <div className="container mx-auto">
+          <AnimatedContainer className="text-center mb-16" variants={fadeIn}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              What Visitors <span className="text-primary">Say About Tabarka</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Read testimonials from travelers who have explored the wonders of Tabarka.
+            </p>
+          </AnimatedContainer>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Sophie Laurent",
+                location: "Paris, France",
+                comment: "The diving experience in Tabarka was incredible! The coral reefs are so vibrant and the underwater caves are mysterious and beautiful.",
+                avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+                rating: 5
+              },
+              {
+                name: "Marco Rossi",
+                location: "Rome, Italy",
+                comment: "As a history enthusiast, I was fascinated by the Roman ruins and the Genoese fort. The guided tours were informative and engaging.",
+                avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+                rating: 4
+              },
+              {
+                name: "Aisha Ahmed",
+                location: "Cairo, Egypt",
+                comment: "The beaches in Tabarka are pristine and not overcrowded. I enjoyed the local cuisine and the warm hospitality of the Tunisian people.",
+                avatar: "https://randomuser.me/api/portraits/women/66.jpg",
+                rating: 5
+              }
+            ].map((testimonial, index) => (
+              <AnimatedContainer
+                key={index}
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300"
+                variants={slideUp}
+                delay={0.1 * index}
+              >
+                <div className="flex items-center mb-4">
+                  <Image
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    width={48}
+                    height={48}
+                    className="rounded-full mr-4"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-foreground">{testimonial.name}</h3>
+                    <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+                  </div>
+                </div>
+                
+                <div className="flex mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <svg
+                      key={i}
+                      className={`w-5 h-5 ${i < testimonial.rating ? "text-yellow-500" : "text-gray-300"}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                
+                <p className="text-foreground italic">"{testimonial.comment}"</p>
+              </AnimatedContainer>
+            ))}
+          </div>
+          
+          <AnimatedContainer className="text-center mt-12" variants={fadeIn} delay={0.5}>
+            <Button asChild variant="outline">
+              <Link href="/testimonials">
+                View All Testimonials
+              </Link>
+            </Button>
+          </AnimatedContainer>
         </div>
       </section>
     </>

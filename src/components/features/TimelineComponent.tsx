@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, useInView, useAnimation } from 'framer-motion';
+import { motion, useInView, useAnimation, AnimatePresence } from 'framer-motion';
 
 type TimelineEvent = {
   id: string;
@@ -105,11 +105,48 @@ const timelineEvents: TimelineEvent[] = [
   }
 ];
 
+// Color scheme mapping for periods
+const periodColorMap = {
+  ancient: {
+    light: 'bg-amber-100 text-amber-800',
+    dark: 'dark:bg-amber-900/30 dark:text-amber-300',
+    accent: 'bg-amber-600',
+    lightAccent: 'bg-amber-400',
+    text: 'text-amber-600',
+    darkText: 'dark:text-amber-400',
+  },
+  medieval: {
+    light: 'bg-emerald-100 text-emerald-800',
+    dark: 'dark:bg-emerald-900/30 dark:text-emerald-300',
+    accent: 'bg-emerald-600',
+    lightAccent: 'bg-emerald-400',
+    text: 'text-emerald-600',
+    darkText: 'dark:text-emerald-400',
+  },
+  colonial: {
+    light: 'bg-sky-100 text-sky-800',
+    dark: 'dark:bg-sky-900/30 dark:text-sky-300',
+    accent: 'bg-sky-600',
+    lightAccent: 'bg-sky-400',
+    text: 'text-sky-600',
+    darkText: 'dark:text-sky-400',
+  },
+  modern: {
+    light: 'bg-purple-100 text-purple-800',
+    dark: 'dark:bg-purple-900/30 dark:text-purple-300',
+    accent: 'bg-purple-600',
+    lightAccent: 'bg-purple-400',
+    text: 'text-purple-600',
+    darkText: 'dark:text-purple-400',
+  },
+};
+
 const TimelineComponent = () => {
   const [activeEventId, setActiveEventId] = useState<string>(timelineEvents[0].id);
   const [activePeriod, setActivePeriod] = useState<string>('all');
+  const [isNavigating, setIsNavigating] = useState<boolean>(false);
   const timelineRef = useRef<HTMLDivElement>(null);
-  const controls = useAnimation();
+  const contentControls = useAnimation();
   const isInView = useInView(timelineRef, { once: false, amount: 0.2 });
   
   // Filter timeline events based on selected period
@@ -131,9 +168,9 @@ const TimelineComponent = () => {
   // Animate the timeline when it comes into view
   useEffect(() => {
     if (isInView) {
-      controls.start('visible');
+      contentControls.start('visible');
     }
-  }, [controls, isInView]);
+  }, [contentControls, isInView]);
 
   // Scroll active event into view in the timeline
   useEffect(() => {
@@ -149,7 +186,15 @@ const TimelineComponent = () => {
   }, [activeEventId, filteredEvents]);
 
   const handleEventClick = (eventId: string) => {
-    setActiveEventId(eventId);
+    if (eventId !== activeEventId) {
+      setIsNavigating(true);
+      setTimeout(() => {
+        setActiveEventId(eventId);
+        setTimeout(() => {
+          setIsNavigating(false);
+        }, 300);
+      }, 300);
+    }
   };
 
   const handlePeriodChange = (periodId: string) => {
@@ -164,6 +209,19 @@ const TimelineComponent = () => {
         setActiveEventId(firstEventOfPeriod.id);
       }
     }
+  };
+
+  const handleNavigation = (direction: 'prev' | 'next') => {
+    const currentIndex = filteredEvents.findIndex(event => event.id === activeEventId);
+    let newIndex;
+    
+    if (direction === 'prev') {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : filteredEvents.length - 1;
+    } else {
+      newIndex = currentIndex < filteredEvents.length - 1 ? currentIndex + 1 : 0;
+    }
+    
+    handleEventClick(filteredEvents[newIndex].id);
   };
 
   // Animation variants
@@ -187,10 +245,36 @@ const TimelineComponent = () => {
     }
   };
 
+  const fadeVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { duration: 0.4 }
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.3 }
+    }
+  };
+
+  // Get color scheme for active event
+  const getColorScheme = (period: string) => {
+    return periodColorMap[period as keyof typeof periodColorMap] || {
+      light: 'bg-primary-100 text-primary-800',
+      dark: 'dark:bg-primary-900/30 dark:text-primary-300',
+      accent: 'bg-primary',
+      lightAccent: 'bg-primary/60',
+      text: 'text-primary',
+      darkText: 'dark:text-primary/80',
+    };
+  };
+
+  const activeColorScheme = getColorScheme(activeEvent.period);
+
   return (
-    <div className="w-full bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
+    <div className="w-full bg-card dark:bg-card rounded-xl shadow-md overflow-hidden">
       {/* Period Filters */}
-      <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 md:p-6 bg-muted dark:bg-muted border-b border-border">
         <div className="flex flex-wrap gap-2">
           {periods.map((period) => (
             <button
@@ -198,8 +282,8 @@ const TimelineComponent = () => {
               onClick={() => handlePeriodChange(period.id)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 activePeriod === period.id
-                  ? 'bg-tabarka-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-background dark:bg-background/80 text-foreground hover:bg-background/80 dark:hover:bg-background/60'
               }`}
             >
               {period.name}
@@ -211,148 +295,151 @@ const TimelineComponent = () => {
       {/* Timeline Track */}
       <div 
         ref={timelineRef}
-        className="relative p-4 overflow-x-auto scrollbar-hide"
+        className="relative p-4 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
       >
-        <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-tabarka-blue-200 dark:bg-tabarka-blue-900 transform -translate-y-1/2"></div>
+        <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-primary/20 transform -translate-y-1/2"></div>
         
         <div className="flex space-x-6 md:space-x-10 py-6 min-w-max">
-          {filteredEvents.map((event, index) => (
-            <motion.div
-              id={`timeline-event-${event.id}`}
-              key={event.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className={`relative flex flex-col items-center cursor-pointer group ${
-                index % 2 === 0 ? 'pt-8 pb-2' : 'pt-2 pb-8'
-              }`}
-              onClick={() => handleEventClick(event.id)}
-            >
-              {/* Timeline point */}
-              <div
-                className={`w-5 h-5 rounded-full z-10 transition-all duration-300 ${
-                  activeEventId === event.id
-                    ? 'bg-tabarka-blue-600 scale-125'
-                    : 'bg-tabarka-blue-400 group-hover:bg-tabarka-blue-500'
+          {filteredEvents.map((event, index) => {
+            const colorScheme = getColorScheme(event.period);
+            
+            return (
+              <motion.div
+                id={`timeline-event-${event.id}`}
+                key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className={`relative flex flex-col items-center cursor-pointer group ${
+                  index % 2 === 0 ? 'pt-8 pb-2' : 'pt-2 pb-8'
                 }`}
-              ></div>
-              
-              {/* Year label */}
-              <div
-                className={`absolute ${
-                  index % 2 === 0 ? 'bottom-full mb-2' : 'top-full mt-2'
-                } text-center`}
+                onClick={() => handleEventClick(event.id)}
               >
-                <div
-                  className={`text-sm font-bold ${
-                    activeEventId === event.id
-                      ? 'text-tabarka-blue-600 dark:text-tabarka-blue-400'
-                      : 'text-gray-600 dark:text-gray-400'
-                  }`}
-                >
-                  {event.year}
+                {/* Timeline point */}
+                <div className="relative">
+                  <div
+                    className={`w-5 h-5 rounded-full z-10 transition-all duration-300 ${
+                      activeEventId === event.id
+                        ? colorScheme.accent
+                        : colorScheme.lightAccent
+                    }`}
+                  ></div>
+                  
+                  {/* Pulse effect for active point */}
+                  {activeEventId === event.id && (
+                    <div className="absolute inset-0 -m-1 rounded-full animate-ping bg-primary/30"></div>
+                  )}
                 </div>
+                
+                {/* Year label */}
                 <div
-                  className={`text-xs transition-all duration-300 ${
-                    activeEventId === event.id
-                      ? 'font-medium text-gray-800 dark:text-gray-200'
-                      : 'font-normal text-gray-500 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                  }`}
+                  className={`absolute ${
+                    index % 2 === 0 ? 'bottom-full mb-2' : 'top-full mt-2'
+                  } text-center`}
                 >
-                  {event.title}
+                  <div
+                    className={`text-sm font-bold transition-colors duration-300 ${
+                      activeEventId === event.id
+                        ? colorScheme.text + ' ' + colorScheme.darkText
+                        : 'text-muted-foreground group-hover:text-foreground'
+                    }`}
+                  >
+                    {event.year}
+                  </div>
+                  <div
+                    className={`text-xs transition-all duration-300 max-w-[120px] ${
+                      activeEventId === event.id
+                        ? 'font-medium text-foreground'
+                        : 'font-normal text-muted-foreground group-hover:text-foreground'
+                    }`}
+                  >
+                    {event.title}
+                  </div>
                 </div>
-              </div>
-              
-              {/* Vertical line */}
-              <div
-                className={`absolute w-0.5 ${index % 2 === 0 ? 'h-8 top-0' : 'h-8 bottom-0'} ${
-                  activeEventId === event.id ? 'bg-tabarka-blue-600' : 'bg-tabarka-blue-200 dark:bg-tabarka-blue-900'
-                }`}
-              ></div>
-            </motion.div>
-          ))}
+                
+                {/* Vertical line */}
+                <div
+                  className={`absolute w-0.5 ${index % 2 === 0 ? 'h-8 top-0' : 'h-8 bottom-0'} ${
+                    activeEventId === event.id 
+                      ? colorScheme.accent
+                      : 'bg-primary/20'
+                  }`}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
       
       {/* Feature Event Display */}
       <motion.div
         initial="hidden"
-        animate="visible"
+        animate={contentControls}
         variants={containerVariants}
         className="p-4 md:p-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {/* Text content */}
-          <motion.div variants={itemVariants} className="flex flex-col justify-center">
-            <span className="text-sm font-semibold text-tabarka-blue-600 dark:text-tabarka-blue-400 mb-2">
-              {activeEvent.year}
-            </span>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              {activeEvent.title}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              {activeEvent.description}
-            </p>
-            <div className="mt-4">
-              <span className="inline-block px-3 py-1 text-xs font-medium rounded-full capitalize bg-tabarka-blue-100 text-tabarka-blue-800 dark:bg-tabarka-blue-900 dark:text-tabarka-blue-100">
-                {activeEvent.period.replace('-', ' ')}
-              </span>
-            </div>
-          </motion.div>
-          
-          {/* Image */}
+        <AnimatePresence mode="wait">
           <motion.div
-            variants={itemVariants}
-            className="relative h-60 md:h-80 overflow-hidden rounded-lg shadow-md"
+            key={activeEventId}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            variants={fadeVariants}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
           >
-            <Image
-              src={activeEvent.image}
-              alt={activeEvent.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30"></div>
+            {/* Text content */}
+            <motion.div variants={itemVariants} className="flex flex-col justify-center order-2 md:order-1">
+              <span className={`text-sm font-semibold inline-block px-3 py-1 rounded-full mb-4 ${activeColorScheme.light} ${activeColorScheme.dark}`}>
+                {activeEvent.year} • {activeEvent.period.charAt(0).toUpperCase() + activeEvent.period.slice(1)} Period
+              </span>
+              <h3 className="text-2xl font-bold text-foreground mb-4">
+                {activeEvent.title}
+              </h3>
+              <p className="text-muted-foreground">
+                {activeEvent.description}
+              </p>
+            </motion.div>
+            
+            {/* Image */}
+            <motion.div
+              variants={itemVariants}
+              className="relative h-60 md:h-80 overflow-hidden rounded-lg shadow-md order-1 md:order-2"
+            >
+              <Image
+                src={activeEvent.image}
+                alt={activeEvent.title}
+                fill
+                className="object-cover transition-transform duration-500 hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30"></div>
+            </motion.div>
           </motion.div>
-        </div>
+        </AnimatePresence>
         
         {/* Navigation buttons */}
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-6">
           <button
-            onClick={() => {
-              const currentIndex = filteredEvents.findIndex(e => e.id === activeEventId);
-              if (currentIndex > 0) {
-                setActiveEventId(filteredEvents[currentIndex - 1].id);
-              }
-            }}
-            disabled={filteredEvents.findIndex(e => e.id === activeEventId) === 0}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              filteredEvents.findIndex(e => e.id === activeEventId) === 0
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+            onClick={() => handleNavigation('prev')}
+            disabled={isNavigating}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            aria-label="Previous event"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span>Previous</span>
           </button>
+
+          <div className="flex items-center px-3 py-1 rounded-full bg-muted/50 text-xs text-muted-foreground">
+            {filteredEvents.findIndex(e => e.id === activeEventId) + 1} of {filteredEvents.length}
+          </div>
           
           <button
-            onClick={() => {
-              const currentIndex = filteredEvents.findIndex(e => e.id === activeEventId);
-              if (currentIndex < filteredEvents.length - 1) {
-                setActiveEventId(filteredEvents[currentIndex + 1].id);
-              }
-            }}
-            disabled={filteredEvents.findIndex(e => e.id === activeEventId) === filteredEvents.length - 1}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              filteredEvents.findIndex(e => e.id === activeEventId) === filteredEvents.length - 1
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+            onClick={() => handleNavigation('next')}
+            disabled={isNavigating}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            aria-label="Next event"
           >
-            <span>Next</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { AnimatedButton } from '@/components/ui/animated-button';
@@ -7,112 +8,128 @@ import { AnimatedSection } from '@/components/ui/animated-section';
 import { fadeIn, slideUp, buttonHover } from '@/lib/animations';
 
 const HeroSection = () => {
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  useEffect(() => {
+    // Add a small delay to ensure the animation looks smooth
+    const timer = setTimeout(() => {
+      setIsVideoLoaded(true);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       {/* Video Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 z-10"></div>
-        
-        {/* This would be replaced with actual video once available */}
-        {/* For now using a placeholder video or we can use an image instead */}
+      <div className="absolute inset-0 w-full h-full bg-tabarka-blue-900 z-0">
         <video
           autoPlay
-          loop
           muted
+          loop
           playsInline
-          className="absolute w-full h-full object-cover"
-          poster="/images/tabarka-underwater-poster.jpg"
+          className="object-cover w-full h-full opacity-70"
+          onLoadedData={() => setIsVideoLoaded(true)}
         >
-          <source 
-            src="https://assets.mixkit.co/videos/preview/mixkit-beautiful-coral-reef-in-the-blue-sea-6170-large.mp4" 
-            type="video/mp4" 
-          />
+          <source src="/videos/tabarka-underwater.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-tabarka-blue-950/90 via-tabarka-blue-900/50 to-transparent" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center">
-        <div className="container mx-auto px-4 text-center text-white">
-          <AnimatedSection className="space-y-6" variants={fadeIn}>
-            <motion.h1 
-              className="text-4xl md:text-6xl font-bold" 
-              variants={fadeIn}
-            >
-              <span className="block">Discover The Beauty Of</span>
-              <motion.span
-                className="text-primary/90 block"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-              >
-                Tabarka
-              </motion.span>
-            </motion.h1>
-
-            <motion.p
-              className="text-xl md:text-2xl max-w-3xl mx-auto"
-              variants={slideUp}
-            >
-              Explore pristine beaches, vibrant coral reefs, and rich history in Tunisia's coastal paradise
-            </motion.p>
-
-            <motion.div
-              className="flex flex-col sm:flex-row justify-center gap-4"
-              variants={slideUp}
-            >
-              <AnimatedButton 
-                size="lg"
-                className="font-medium"
-                asChild
-              >
-                <Link href="/explore">
-                  Explore Tabarka
-                </Link>
-              </AnimatedButton>
-              <AnimatedButton 
-                variant="outline"
-                size="lg"
-                className="text-white border-white font-medium hover:bg-white/20"
-                asChild
-              >
-                <Link href="/gallery">
-                  View Gallery
-                </Link>
-              </AnimatedButton>
-            </motion.div>
-          </AnimatedSection>
-
-          {/* Scroll indicator */}
-          <motion.div
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 1, 
-              delay: 1.5,
-              repeat: Infinity,
-              repeatType: "reverse",
-              repeatDelay: 0.2
-            }}
+      <div className="relative z-10 container mx-auto h-full flex flex-col justify-center px-4 lg:px-6">
+        <motion.div
+          variants={fadeIn}
+          initial="hidden"
+          animate={isVideoLoaded ? "visible" : "hidden"}
+          className="max-w-4xl"
+        >
+          <motion.h1 
+            className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6"
+            variants={slideUp}
+            initial="hidden"
+            animate={isVideoLoaded ? "visible" : "hidden"}
+            transition={{ delay: 0.2 }}
           >
-            <svg 
-              className="w-8 h-8 text-white" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
+            Discover the Hidden Treasures of{' '}
+            <span className="text-tabarka-coral-400">Tabarka</span>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl"
+            variants={slideUp}
+            initial="hidden"
+            animate={isVideoLoaded ? "visible" : "hidden"}
+            transition={{ delay: 0.4 }}
+          >
+            Explore the breathtaking underwater world, historical sites, and natural beauty 
+            of Tunisia's coastal gem.
+          </motion.p>
+          
+          <motion.div
+            variants={slideUp}
+            initial="hidden"
+            animate={isVideoLoaded ? "visible" : "hidden"}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4"
+          >
+            <AnimatedButton 
+              size="lg" 
+              withGlow 
+              glowColor="coral"
+              glowIntensity={0.7}
+              className="bg-tabarka-coral-500 hover:bg-tabarka-coral-600 text-white"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
-                d="M19 14l-7 7m0 0l-7-7m7 7V3"
-              />
-            </svg>
+              Explore Destinations
+            </AnimatedButton>
+            
+            <AnimatedButton 
+              size="lg"
+              variant="outline"
+              withGlow
+              glowColor="blue"
+              className="border-white text-white hover:bg-tabarka-blue-900/30"
+            >
+              Plan Your Visit
+            </AnimatedButton>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
+      
+      {/* Scroll indicator */}
+      <motion.div 
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ 
+          opacity: isVideoLoaded ? 1 : 0, 
+          y: 0,
+          transition: { 
+            delay: 1,
+            duration: 0.6,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }
+        }}
+      >
+        <div className="flex flex-col items-center">
+          <span className="text-white/80 text-sm mb-2">Scroll to explore</span>
+          <svg 
+            className="w-6 h-6 text-white/80" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            />
+          </svg>
+        </div>
+      </motion.div>
 
       {/* Wave overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0">
