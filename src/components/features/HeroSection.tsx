@@ -2,6 +2,9 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { AnimatedButton } from '@/components/ui/animated-button';
+import { AnimatedSection } from '@/components/ui/animated-section';
+import { fadeIn, slideUp, buttonHover } from '@/lib/animations';
 
 const HeroSection = () => {
   return (
@@ -31,52 +34,54 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 h-full flex items-center">
         <div className="container mx-auto px-4 text-center text-white">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          <AnimatedSection className="space-y-6" variants={fadeIn}>
+            <motion.h1 
+              className="text-4xl md:text-6xl font-bold" 
+              variants={fadeIn}
+            >
               <span className="block">Discover The Beauty Of</span>
               <motion.span
-                className="text-tabarka-blue-300 block"
+                className="text-primary/90 block"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
               >
                 Tabarka
               </motion.span>
-            </h1>
-          </motion.div>
+            </motion.h1>
 
-          <motion.p
-            className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-          >
-            Explore pristine beaches, vibrant coral reefs, and rich history in Tunisia's coastal paradise
-          </motion.p>
+            <motion.p
+              className="text-xl md:text-2xl max-w-3xl mx-auto"
+              variants={slideUp}
+            >
+              Explore pristine beaches, vibrant coral reefs, and rich history in Tunisia's coastal paradise
+            </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4"
-          >
-            <Link 
-              href="/explore"
-              className="px-8 py-3 bg-tabarka-blue-500 text-white rounded-full font-medium hover:bg-tabarka-blue-600 transition-colors transform hover:scale-105 duration-300"
+            <motion.div
+              className="flex flex-col sm:flex-row justify-center gap-4"
+              variants={slideUp}
             >
-              Explore Tabarka
-            </Link>
-            <Link 
-              href="/gallery"
-              className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-medium hover:bg-white/20 transition-colors transform hover:scale-105 duration-300"
-            >
-              View Gallery
-            </Link>
-          </motion.div>
+              <AnimatedButton 
+                size="lg"
+                className="font-medium"
+                asChild
+              >
+                <Link href="/explore">
+                  Explore Tabarka
+                </Link>
+              </AnimatedButton>
+              <AnimatedButton 
+                variant="outline"
+                size="lg"
+                className="text-white border-white font-medium hover:bg-white/20"
+                asChild
+              >
+                <Link href="/gallery">
+                  View Gallery
+                </Link>
+              </AnimatedButton>
+            </motion.div>
+          </AnimatedSection>
 
           {/* Scroll indicator */}
           <motion.div
@@ -119,7 +124,7 @@ const HeroSection = () => {
         >
           <path 
             fill="currentColor"
-            className="text-white dark:text-gray-950" 
+            className="text-background" 
             d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,256C960,245,1056,203,1152,186.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           ></path>
         </svg>

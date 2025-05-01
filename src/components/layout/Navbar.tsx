@@ -5,25 +5,14 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher';
+import { AnimatedHeader } from '@/components/ui/animated-header';
+import { AnimatedButton } from '@/components/ui/animated-button';
+import { fadeIn, slideInLeft, slideInRight, slideUp } from '@/lib/animations';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
-
-  // Handle scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleToggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -43,10 +32,9 @@ const Navbar = () => {
 
   // Animation variants
   const navVariants = {
-    hidden: { opacity: 0, y: -20 },
+    hidden: { opacity: 0 },
     visible: { 
       opacity: 1, 
-      y: 0,
       transition: { 
         staggerChildren: 0.1,
         ease: "easeOut" 
@@ -60,28 +48,20 @@ const Navbar = () => {
   };
 
   return (
-    <motion.nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md' 
-          : 'bg-transparent'
-      }`}
-      initial="hidden"
-      animate="visible"
-      variants={navVariants}
+    <AnimatedHeader 
+      withShadow={true} 
+      transparentAtTop={true}
+      shrinkOnScroll={true}
+      scrollThreshold={50}
     >
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div className="container mx-auto px-4 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <div className="relative w-10 h-10 overflow-hidden rounded-full bg-tabarka-blue-500">
+          <div className="relative w-10 h-10 overflow-hidden rounded-full bg-primary">
             {/* Replace with actual logo when available */}
-            <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl">T</div>
+            <div className="absolute inset-0 flex items-center justify-center text-primary-foreground font-bold text-xl">T</div>
           </div>
-          <span className={`font-bold text-xl ${
-            isScrolled 
-              ? 'text-tabarka-blue-800 dark:text-tabarka-blue-300' 
-              : 'text-white'
-          }`}>
+          <span className="font-bold text-xl text-foreground">
             Discover Tabarka
           </span>
         </Link>
@@ -90,16 +70,14 @@ const Navbar = () => {
         <motion.div 
           className="hidden md:flex space-x-6 items-center"
           variants={navVariants}
+          initial="hidden"
+          animate="visible"
         >
           {navLinks.map((link) => (
             <motion.div key={link.href} variants={itemVariants}>
               <Link 
                 href={link.href}
-                className={`font-medium hover:text-tabarka-blue-500 transition-colors ${
-                  isScrolled 
-                    ? 'text-tabarka-blue-800 dark:text-tabarka-blue-300' 
-                    : 'text-white'
-                }`}
+                className="font-medium hover:text-primary transition-colors text-foreground"
               >
                 {link.label}
               </Link>
@@ -116,43 +94,42 @@ const Navbar = () => {
             <div className="flex items-center space-x-4">
               <Link
                 href="/profile"
-                className={`font-medium hover:text-tabarka-blue-500 transition-colors ${
-                  isScrolled 
-                    ? 'text-tabarka-blue-800 dark:text-tabarka-blue-300' 
-                    : 'text-white'
-                }`}
+                className="font-medium hover:text-primary transition-colors text-foreground"
               >
                 Profile
               </Link>
-              <motion.button
+              <AnimatedButton
                 variants={itemVariants}
                 onClick={signOut}
-                className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors"
+                variant="default"
+                size="sm"
               >
                 Sign Out
-              </motion.button>
+              </AnimatedButton>
             </div>
           ) : (
             <div className="flex items-center space-x-4">
               <motion.div variants={itemVariants}>
                 <Link
                   href="/login"
-                  className={`font-medium hover:text-tabarka-blue-500 transition-colors ${
-                    isScrolled 
-                      ? 'text-tabarka-blue-800 dark:text-tabarka-blue-300' 
-                      : 'text-white'
-                  }`}
+                  className="font-medium hover:text-primary transition-colors text-foreground"
                 >
                   Login
                 </Link>
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors"
+                <AnimatedButton
+                  variant="default"
+                  size="sm"
+                  asChild
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  Sign Up
-                </Link>
+                  <Link href="/register">
+                    Sign Up
+                  </Link>
+                </AnimatedButton>
               </motion.div>
             </div>
           )}
@@ -164,14 +141,11 @@ const Navbar = () => {
           <button 
             onClick={handleToggleMenu}
             aria-label="Toggle menu"
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-md p-1"
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
-              className={`h-6 w-6 ${
-                isScrolled 
-                  ? 'text-tabarka-blue-800 dark:text-tabarka-blue-300' 
-                  : 'text-white'
-              }`} 
+              className="h-6 w-6 text-foreground" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor"
@@ -190,7 +164,7 @@ const Navbar = () => {
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <motion.div 
-          className="md:hidden bg-white dark:bg-gray-900 shadow-lg"
+          className="md:hidden bg-background border-t shadow-lg"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
@@ -201,7 +175,7 @@ const Navbar = () => {
               <Link 
                 key={link.href}
                 href={link.href}
-                className="font-medium text-tabarka-blue-800 dark:text-tabarka-blue-300 hover:text-tabarka-blue-500 transition-colors"
+                className="font-medium text-foreground hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
@@ -213,43 +187,49 @@ const Navbar = () => {
               <div className="flex flex-col space-y-2">
                 <Link
                   href="/profile"
-                  className="font-medium text-tabarka-blue-800 dark:text-tabarka-blue-300 hover:text-tabarka-blue-500 transition-colors"
+                  className="font-medium text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Profile
                 </Link>
-                <button
+                <AnimatedButton
                   onClick={() => {
                     signOut();
                     setIsMenuOpen(false);
                   }}
-                  className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors text-center"
+                  variant="default"
+                  className="w-full justify-center"
                 >
                   Sign Out
-                </button>
+                </AnimatedButton>
               </div>
             ) : (
               <div className="flex flex-col space-y-2">
                 <Link
                   href="/login"
-                  className="font-medium text-tabarka-blue-800 dark:text-tabarka-blue-300 hover:text-tabarka-blue-500 transition-colors"
+                  className="font-medium text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login
                 </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 rounded-full bg-tabarka-blue-500 text-white hover:bg-tabarka-blue-600 transition-colors text-center"
-                  onClick={() => setIsMenuOpen(false)}
+                <AnimatedButton
+                  variant="default"
+                  className="w-full justify-center"
+                  asChild
                 >
-                  Sign Up
-                </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </AnimatedButton>
               </div>
             )}
           </div>
         </motion.div>
       )}
-    </motion.nav>
+    </AnimatedHeader>
   );
 };
 

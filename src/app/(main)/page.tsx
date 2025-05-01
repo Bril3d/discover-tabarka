@@ -5,6 +5,8 @@ import PostCard from '@/components/ui/PostCard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { AnimatedButton } from '@/components/ui/animated-button';
+import { AnimatedSection } from '@/components/ui/animated-section';
 
 // Mock data for featured posts - would be fetched from Supabase in production
 const featuredPosts = [
@@ -59,77 +61,101 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const slideInLeft = {
+  hidden: { opacity: 0, x: -50 },
+  visible: { opacity: 1, x: 0 }
+};
+
+const slideInRight = {
+  hidden: { opacity: 0, x: 50 },
+  visible: { opacity: 1, x: 0 }
+};
+
+const slideUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0 }
+};
+
 export default function Home() {
   return (
     <>
       <HeroSection />
       
       {/* Featured Posts Section */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-950">
+      <section className="py-20 px-4 bg-background">
         <div className="container mx-auto">
-          <motion.div
+          <AnimatedSection 
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            variants={fadeIn}
+            threshold={0.1}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Featured <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Experiences</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Featured <span className="text-primary">Experiences</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Discover the best of what Tabarka has to offer through the eyes of travelers and locals alike.
             </p>
-          </motion.div>
+          </AnimatedSection>
           
-          <motion.div 
+          <AnimatedSection 
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
+            variants={staggerContainer}
+            threshold={0.1}
           >
-            {featuredPosts.map((post) => (
-              <motion.div key={post.id} variants={itemVariants}>
+            {featuredPosts.map((post, index) => (
+              <motion.div key={post.id} variants={index % 2 === 0 ? slideInLeft : slideUp}>
                 <PostCard {...post} />
               </motion.div>
             ))}
-          </motion.div>
+          </AnimatedSection>
           
-          <motion.div
+          <AnimatedSection
             className="mt-12 text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            variants={fadeIn}
+            delay={0.4}
           >
-            <Link
-              href="/explore"
-              className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
+            <AnimatedButton
+              asChild
+              size="lg"
             >
-              View All Experiences
-              <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
-          </motion.div>
+              <Link href="/explore" className="inline-flex items-center">
+                View All Experiences
+                <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </AnimatedButton>
+          </AnimatedSection>
         </div>
       </section>
       
       {/* Map Exploration Section */}
-      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900">
+      <section className="py-20 px-4 bg-muted/50">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+            <AnimatedSection
+              variants={slideInLeft}
+              threshold={0.1}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
                 Explore Tabarka on the Map
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Discover Tabarka's diverse attractions from pristine beaches and diving spots to historical landmarks and local restaurants, all accessible with our interactive map.
               </p>
               <ul className="space-y-4 mb-8">
@@ -141,36 +167,34 @@ export default function Home() {
                 ].map((item, index) => (
                   <motion.li
                     key={index}
-                    className="flex items-start text-gray-700 dark:text-gray-300"
+                    className="flex items-start text-foreground"
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.3, delay: 0.1 * index }}
                   >
-                    <svg className="h-6 w-6 text-tabarka-blue-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-6 w-6 text-primary mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>{item}</span>
                   </motion.li>
                 ))}
               </ul>
-              <Link
-                href="/locations"
-                className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
-              >
-                Explore Map
-                <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </motion.div>
+              <AnimatedButton asChild>
+                <Link href="/locations" className="inline-flex items-center">
+                  Explore Map
+                  <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </AnimatedButton>
+            </AnimatedSection>
             
-            <motion.div
+            <AnimatedSection
               className="relative rounded-xl overflow-hidden shadow-lg h-96 lg:h-[500px]"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              variants={slideInRight}
+              threshold={0.1}
+              delay={0.2}
             >
               <Image
                 src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce"
@@ -189,151 +213,113 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
 
       {/* History Timeline Preview */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-950">
+      <section className="py-20 px-4 bg-background">
         <div className="container mx-auto">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Journey Through <span className="text-tabarka-blue-600 dark:text-tabarka-blue-400">Time</span>
+          <AnimatedSection className="text-center mb-16" variants={fadeIn}>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+              Discover <span className="text-primary">Tabarka's History</span>
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Explore Tabarka's rich history from ancient Phoenician settlements to modern-day cultural hub.
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              From ancient Phoenician outpost to modern tourist destination, explore the rich historical timeline of this Mediterranean jewel.
             </p>
-          </motion.div>
+          </AnimatedSection>
           
-          <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-tabarka-blue-100 dark:bg-tabarka-blue-900/30 rounded-full"></div>
+          {/* Timeline Items (simplified for this example) */}
+          <div className="relative mt-12 max-w-4xl mx-auto">
+            {/* Timeline Line */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-primary/20"></div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
-              {[
-                {
-                  era: 'Ancient Times',
-                  year: '1100 BCE',
-                  title: 'Phoenician Settlement',
-                  description: 'Established as "Thabraca", a trading post for precious purple dye.',
-                  image: 'https://images.unsplash.com/photo-1555993539-1732b0258235'
-                },
-                {
-                  era: 'Roman Period',
-                  year: '146 BCE - 439 CE',
-                  title: 'Roman Expansion',
-                  description: 'Flourished as a Roman colony with significant infrastructure development.',
-                  image: 'https://images.unsplash.com/photo-1548812966-9a9983d5e309'
-                },
-                {
-                  era: 'Genoese Era',
-                  year: '1540 - 1741',
-                  title: 'Coral Trade Dominance',
-                  description: 'Genoese established a coral fishing settlement, building the iconic fortress.',
-                  image: 'https://images.unsplash.com/photo-1552406612-3bfff359cd4e'
-                },
-                {
-                  era: 'Modern Era',
-                  year: '1973 - Present',
-                  title: 'Cultural Renaissance',
-                  description: 'Launch of the Tabarka Jazz Festival puts the town on the global cultural map.',
-                  image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819'
-                }
-              ].map((event, index) => (
-                <motion.div
-                  key={index}
-                  className={`relative pb-12 ${index % 2 === 0 ? 'md:text-right md:pr-12' : 'md:pl-12 md:ml-auto'}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.1 * index }}
-                >
-                  <div className={`hidden md:block absolute top-0 h-6 w-6 rounded-full bg-tabarka-blue-500 ${
-                    index % 2 === 0 ? 'right-0 -translate-x-1/2' : 'left-0 translate-x-1/2'
-                  } -translate-y-1/2`}></div>
-                  
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={event.image}
-                        alt={event.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                      />
-                      <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                        {event.year}
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-tabarka-blue-100 dark:bg-tabarka-blue-900/30 text-tabarka-blue-800 dark:text-tabarka-blue-300 mb-2">
-                        {event.era}
-                      </span>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h3>
-                      <p className="text-gray-600 dark:text-gray-300">{event.description}</p>
-                    </div>
+            {/* Timeline Items */}
+            {[
+              {
+                year: "8th Century BC",
+                title: "Phoenician Settlement",
+                description: "Tabarka was first settled by Phoenicians who established it as a trading post."
+              },
+              {
+                year: "146 BC",
+                title: "Roman Conquest",
+                description: "The region fell under Roman control following the destruction of Carthage."
+              },
+              {
+                year: "1540 AD",
+                title: "Genoese Colony",
+                description: "Charles V of Spain granted the coral fishing rights to a Genoese family, leading to the construction of the iconic fort."
+              },
+              {
+                year: "1741 AD",
+                title: "Ottoman Rule",
+                description: "Tabarka was conquered by the Bey of Tunis, ending the Genoese presence."
+              }
+            ].map((item, index) => (
+              <AnimatedSection
+                key={index}
+                className={`relative flex items-center mb-12 ${
+                  index % 2 === 0 ? "justify-start" : "justify-end"
+                }`}
+                variants={index % 2 === 0 ? slideInLeft : slideInRight}
+                delay={0.2 * index}
+              >
+                <div className={`w-5/12 ${index % 2 === 1 ? "order-1" : ""}`}>
+                  <div className="bg-card p-6 rounded-lg shadow-md">
+                    <span className="text-primary font-bold">{item.year}</span>
+                    <h3 className="text-xl font-semibold mt-1">{item.title}</h3>
+                    <p className="text-muted-foreground mt-2">{item.description}</p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+                <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-primary z-10"></div>
+                </div>
+              </AnimatedSection>
+            ))}
           </div>
           
-          <motion.div
-            className="mt-12 text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
-            <Link
-              href="/history"
-              className="inline-flex items-center px-6 py-3 rounded-lg bg-tabarka-blue-600 hover:bg-tabarka-blue-700 text-white font-medium transition-colors"
-            >
-              Explore Full Timeline
-              <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </motion.div>
+          <AnimatedSection className="text-center mt-12" variants={fadeIn}>
+            <AnimatedButton asChild size="lg">
+              <Link href="/history">
+                Explore Full Timeline
+              </Link>
+            </AnimatedButton>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 px-4 bg-gradient-to-r from-tabarka-blue-600 to-tabarka-blue-800 text-white">
-        <div className="container mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Experience Tabarka?
-            </h2>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto mb-10">
-              Join our community and share your own Tabarka adventures or find inspiration for your next visit.
+      <section className="py-24 px-4 bg-primary text-primary-foreground">
+        <div className="container mx-auto">
+          <AnimatedSection className="max-w-3xl mx-auto text-center space-y-6" variants={fadeIn}>
+            <h2 className="text-3xl md:text-5xl font-bold">Ready to Discover Tabarka?</h2>
+            <p className="text-primary-foreground/90 text-lg">
+              Plan your journey to one of Tunisia's most beautiful coastal destinations. Immerse yourself in culture, history, and natural beauty.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link 
-                href="/register"
-                className="px-8 py-3 bg-white text-tabarka-blue-600 rounded-full font-medium hover:bg-tabarka-blue-50 transition-colors"
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+              <AnimatedButton 
+                variant="secondary" 
+                size="lg"
+                asChild
               >
-                Sign Up Today
-              </Link>
-              <Link 
-                href="/gallery"
-                className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-medium hover:bg-white/10 transition-colors"
+                <Link href="/itineraries">
+                  View Itineraries
+                </Link>
+              </AnimatedButton>
+              <AnimatedButton 
+                variant="outline" 
+                size="lg" 
+                className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/20"
+                asChild
               >
-                Browse Gallery
-              </Link>
+                <Link href="/contact">
+                  Contact Us
+                </Link>
+              </AnimatedButton>
             </div>
-          </motion.div>
+          </AnimatedSection>
         </div>
       </section>
     </>
