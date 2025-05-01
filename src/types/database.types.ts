@@ -18,7 +18,9 @@ export interface Database {
           avatar_url: string | null
           bio: string | null
           is_local: boolean
-          role: 'user' | 'admin'
+          role: 'user' | 'admin' | 'moderator' | 'contributor'
+          status: 'active' | 'suspended' | 'pending'
+          last_active: string | null
         }
         Insert: {
           id: string
@@ -28,7 +30,9 @@ export interface Database {
           avatar_url?: string | null
           bio?: string | null
           is_local?: boolean
-          role?: 'user' | 'admin'
+          role?: 'user' | 'admin' | 'moderator' | 'contributor'
+          status?: 'active' | 'suspended' | 'pending'
+          last_active?: string | null
         }
         Update: {
           id?: string
@@ -38,7 +42,9 @@ export interface Database {
           avatar_url?: string | null
           bio?: string | null
           is_local?: boolean
-          role?: 'user' | 'admin'
+          role?: 'user' | 'admin' | 'moderator' | 'contributor'
+          status?: 'active' | 'suspended' | 'pending'
+          last_active?: string | null
         }
       }
       posts: {
@@ -47,7 +53,9 @@ export interface Database {
           created_at: string
           updated_at: string
           title: string
+          slug: string
           content: string | null
+          excerpt: string | null
           user_id: string
           location_id: string | null
           category_id: string
@@ -55,13 +63,21 @@ export interface Database {
           media_type: 'image' | 'video' | 'text'
           is_featured: boolean
           is_approved: boolean
+          status: 'draft' | 'published' | 'scheduled'
+          published_at: string | null
+          views_count: number
+          likes_count: number
+          comments_count: number
+          type: 'post' | 'guide' | 'event' | 'location' | 'review'
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
           title: string
+          slug: string
           content?: string | null
+          excerpt?: string | null
           user_id: string
           location_id?: string | null
           category_id: string
@@ -69,13 +85,21 @@ export interface Database {
           media_type: 'image' | 'video' | 'text'
           is_featured?: boolean
           is_approved?: boolean
+          status?: 'draft' | 'published' | 'scheduled'
+          published_at?: string | null
+          views_count?: number
+          likes_count?: number
+          comments_count?: number
+          type?: 'post' | 'guide' | 'event' | 'location' | 'review'
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
           title?: string
+          slug?: string
           content?: string | null
+          excerpt?: string | null
           user_id?: string
           location_id?: string | null
           category_id?: string
@@ -83,6 +107,12 @@ export interface Database {
           media_type?: 'image' | 'video' | 'text'
           is_featured?: boolean
           is_approved?: boolean
+          status?: 'draft' | 'published' | 'scheduled'
+          published_at?: string | null
+          views_count?: number
+          likes_count?: number
+          comments_count?: number
+          type?: 'post' | 'guide' | 'event' | 'location' | 'review'
         }
       }
       comments: {
@@ -93,6 +123,7 @@ export interface Database {
           user_id: string
           post_id: string
           is_approved: boolean
+          reported_count: number
         }
         Insert: {
           id?: string
@@ -101,6 +132,7 @@ export interface Database {
           user_id: string
           post_id: string
           is_approved?: boolean
+          reported_count?: number
         }
         Update: {
           id?: string
@@ -109,6 +141,7 @@ export interface Database {
           user_id?: string
           post_id?: string
           is_approved?: boolean
+          reported_count?: number
         }
       }
       locations: {
@@ -121,6 +154,7 @@ export interface Database {
           longitude: number
           image_url: string | null
           address: string | null
+          visits_count: number
         }
         Insert: {
           id?: string
@@ -131,6 +165,7 @@ export interface Database {
           longitude: number
           image_url?: string | null
           address?: string | null
+          visits_count?: number
         }
         Update: {
           id?: string
@@ -141,6 +176,7 @@ export interface Database {
           longitude?: number
           image_url?: string | null
           address?: string | null
+          visits_count?: number
         }
       }
       categories: {
@@ -193,6 +229,154 @@ export interface Database {
           user_id?: string
           location_id?: string
           is_approved?: boolean
+        }
+      }
+      user_permissions: {
+        Row: {
+          id: string
+          user_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          permission_id?: string
+          created_at?: string
+        }
+      }
+      permissions: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          type: string
+          title: string
+          message: string
+          priority: 'low' | 'medium' | 'high'
+          created_at: string
+          read: boolean
+          user_id: string | null
+          action_url: string | null
+          content_type: string | null
+          content_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          id?: string
+          type: string
+          title: string
+          message: string
+          priority?: 'low' | 'medium' | 'high'
+          created_at?: string
+          read?: boolean
+          user_id?: string | null
+          action_url?: string | null
+          content_type?: string | null
+          content_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          id?: string
+          type?: string
+          title?: string
+          message?: string
+          priority?: 'low' | 'medium' | 'high'
+          created_at?: string
+          read?: boolean
+          user_id?: string | null
+          action_url?: string | null
+          content_type?: string | null
+          content_id?: string | null
+          sender_id?: string | null
+        }
+      }
+      notification_settings: {
+        Row: {
+          id: string
+          user_id: string
+          setting_type: string
+          email_enabled: boolean
+          push_enabled: boolean
+          in_app_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          setting_type: string
+          email_enabled?: boolean
+          push_enabled?: boolean
+          in_app_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          setting_type?: string
+          email_enabled?: boolean
+          push_enabled?: boolean
+          in_app_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      analytics_events: {
+        Row: {
+          id: string
+          event_type: string
+          event_data: Json
+          user_id: string | null
+          session_id: string | null
+          created_at: string
+          page_url: string | null
+          device_type: string | null
+        }
+        Insert: {
+          id?: string
+          event_type: string
+          event_data: Json
+          user_id?: string | null
+          session_id?: string | null
+          created_at?: string
+          page_url?: string | null
+          device_type?: string | null
+        }
+        Update: {
+          id?: string
+          event_type?: string
+          event_data?: Json
+          user_id?: string | null
+          session_id?: string | null
+          created_at?: string
+          page_url?: string | null
+          device_type?: string | null
         }
       }
     }

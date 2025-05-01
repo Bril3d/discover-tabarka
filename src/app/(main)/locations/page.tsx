@@ -6,6 +6,19 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { supabase } from '@/lib/supabase/client';
+
+// Location interface
+interface Location {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  category: string;
+  rating: number;
+  latitude: number;
+  longitude: number;
+}
 
 // Dynamically import the MapComponent with no SSR to avoid hydration issues
 const MapComponent = dynamic(() => import('@/components/features/MapComponent'), { 
@@ -19,90 +32,6 @@ const MapComponent = dynamic(() => import('@/components/features/MapComponent'),
     </div>
   )
 });
-
-// Mock data - would be fetched from Supabase in production
-const locations = [
-  {
-    id: '1',
-    name: 'Coral Bay',
-    description: 'Experience some of the most vibrant coral reefs in the Mediterranean. Perfect for diving and snorkeling enthusiasts.',
-    image: 'https://images.unsplash.com/photo-1546026423-cc4642628d2b',
-    category: 'diving',
-    rating: 4.8,
-    latitude: 36.964,
-    longitude: 8.758
-  },
-  {
-    id: '2',
-    name: 'Needles Rock Formation',
-    description: 'Iconic red sandstone cliffs and needle-like rock formations that jut out dramatically into the sea.',
-    image: 'https://images.unsplash.com/photo-1566409358502-1fe56a505a43',
-    category: 'landscapes',
-    rating: 4.9,
-    latitude: 36.968,
-    longitude: 8.746
-  },
-  {
-    id: '3',
-    name: 'Tabarka Beach',
-    description: 'A pristine stretch of golden sand with crystal clear waters. Ideal for swimming and sunbathing.',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-    category: 'beaches',
-    rating: 4.7,
-    latitude: 36.955,
-    longitude: 8.761
-  },
-  {
-    id: '4',
-    name: 'Roman Ruins of Bulla Regia',
-    description: 'Explore the ancient Roman underground villas with well-preserved mosaics dating back to the 2nd century.',
-    image: 'https://images.unsplash.com/photo-1555993539-1732b0258235',
-    category: 'historical',
-    rating: 4.6,
-    latitude: 36.561,
-    longitude: 8.755
-  },
-  {
-    id: '5',
-    name: 'Feija National Park',
-    description: 'Lush forests, diverse wildlife, and scenic hiking trails in the nearby Kroumirie Mountains.',
-    image: 'https://images.unsplash.com/photo-1448375240586-882707db888b',
-    category: 'nature',
-    rating: 4.5,
-    latitude: 36.500,
-    longitude: 8.600
-  },
-  {
-    id: '6',
-    name: 'Fort Tabarka',
-    description: 'Historical Genoese fort offering panoramic views of the harbor and city. Great for history enthusiasts.',
-    image: 'https://images.unsplash.com/photo-1552406612-3bfff359cd4e',
-    category: 'historical',
-    rating: 4.4,
-    latitude: 36.960,
-    longitude: 8.758
-  },
-  {
-    id: '7',
-    name: 'Tabarka Marina',
-    description: 'Picturesque marina with restaurants serving fresh seafood and stunning views of fishing boats.',
-    image: 'https://images.unsplash.com/photo-1565369728672-f490366173ba',
-    category: 'food',
-    rating: 4.3,
-    latitude: 36.958,
-    longitude: 8.763
-  },
-  {
-    id: '8',
-    name: 'Jazz Festival Venue',
-    description: 'The location of the famous Tabarka Jazz Festival, hosting world-class musicians every summer.',
-    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
-    category: 'entertainment',
-    rating: 4.7,
-    latitude: 36.965,
-    longitude: 8.755
-  }
-];
 
 // Categories for filtering
 const categories = [
@@ -120,8 +49,11 @@ export default function LocationsPage() {
   const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredLocations, setFilteredLocations] = useState(locations);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Get initial category from URL if present
   useEffect(() => {
@@ -131,8 +63,89 @@ export default function LocationsPage() {
     }
   }, [searchParams]);
 
+  // Fetch locations from Supabase
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch locations from the database
+        const { data, error } = await supabase
+          .from('locations')
+          .select('*')
+          .order('name');
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Format locations for use in the component
+        const formattedLocations: Location[] = data.map((location) => ({
+          id: location.id,
+          name: location.name,
+          description: location.description,
+          image: location.image_url || 'https://images.unsplash.com/photo-1546026423-cc4642628d2b',
+          category: getCategoryForLocation(location),
+          rating: calculateRating(location.visits_count || 0),
+          latitude: location.latitude,
+          longitude: location.longitude
+        }));
+        
+        setLocations(formattedLocations);
+      } catch (err) {
+        console.error('Error fetching locations:', err);
+        setError('Failed to load locations');
+        setLocations([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchLocations();
+  }, []);
+
+  // Get a category based on location properties
+  const getCategoryForLocation = (location: any): string => {
+    // In a real app, this would be based on actual data
+    const nameLower = location.name.toLowerCase();
+    if (nameLower.includes('beach')) return 'beaches';
+    if (nameLower.includes('coral') || nameLower.includes('dive')) return 'diving';
+    if (nameLower.includes('ruins') || nameLower.includes('fort')) return 'historical';
+    if (nameLower.includes('restaurant') || nameLower.includes('café')) return 'food';
+    if (nameLower.includes('park') || nameLower.includes('forest')) return 'nature';
+    if (nameLower.includes('festival') || nameLower.includes('theater')) return 'entertainment';
+    if (nameLower.includes('rock') || nameLower.includes('mountain')) return 'landscapes';
+    
+    // Default category based on description
+    const descLower = location.description.toLowerCase();
+    if (descLower.includes('beach') || descLower.includes('sand')) return 'beaches';
+    if (descLower.includes('dive') || descLower.includes('coral')) return 'diving';
+    if (descLower.includes('history') || descLower.includes('ancient')) return 'historical';
+    if (descLower.includes('food') || descLower.includes('restaurant')) return 'food';
+    if (descLower.includes('nature') || descLower.includes('tree')) return 'nature';
+    if (descLower.includes('entertain') || descLower.includes('music')) return 'entertainment';
+    if (descLower.includes('view') || descLower.includes('landscape')) return 'landscapes';
+    
+    return 'landscapes'; // default category
+  };
+
+  // Calculate a rating based on visits 
+  const calculateRating = (visits: number): number => {
+    // Simple algorithm to generate a rating between 4.0 and 5.0 based on visit count
+    // Higher visit counts lead to higher ratings
+    const baseRating = 4.0;
+    const visitModifier = Math.min(1.0, visits / 100); // Max out at 100 visits
+    return parseFloat((baseRating + visitModifier).toFixed(1));
+  };
+
   // Filter locations based on category and search query
   useEffect(() => {
+    if (locations.length === 0) {
+      setFilteredLocations([]);
+      return;
+    }
+    
     let filtered = locations;
     
     // Filter by category
@@ -151,7 +164,7 @@ export default function LocationsPage() {
     }
     
     setFilteredLocations(filtered);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, locations]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -181,6 +194,61 @@ export default function LocationsPage() {
     }
   };
 
+  // Loading UI
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16 animate-pulse">
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 max-w-md mx-auto"></div>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 max-w-2xl mx-auto"></div>
+          </div>
+          
+          <div className="flex justify-between items-center mb-8 animate-pulse">
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded-full w-32"></div>
+              ))}
+            </div>
+            
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-32"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-md mb-2 w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 w-full"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error UI
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl font-bold text-foreground mb-4">Something Went Wrong</h1>
+          <p className="text-muted-foreground mb-8">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-7xl mx-auto">
@@ -200,8 +268,7 @@ export default function LocationsPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl text-muted-foreground max-w-2xl mx-auto"
           >
-            Discover the hidden gems of Tabarka, from pristine beaches and vibrant coral reefs
-            to historical landmarks and scenic viewpoints.
+            Discover incredible locations, from pristine beaches to historic ruins, all across the beautiful region of Tabarka.
           </motion.p>
         </div>
 

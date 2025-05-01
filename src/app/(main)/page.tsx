@@ -1,49 +1,13 @@
 'use client';
 
+import { useState, useRef, ReactNode, useEffect } from 'react';
 import HeroSection from '@/components/features/HeroSection';
 import PostCard from '@/components/ui/PostCard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, useInView, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useState, useRef, ReactNode } from 'react';
-
-// Mock data for featured posts - would be fetched from Supabase in production
-const featuredPosts = [
-  {
-    id: '1',
-    title: `Exploring Tabarka's Vibrant Coral Reefs`,
-    excerpt: `Dive into the mesmerizing underwater world of Tabarka, home to some of the Mediterranean's most colorful coral reefs and marine life.`,
-    mediaUrl: 'https://images.unsplash.com/photo-1546026423-cc4642628d2b',
-    mediaType: 'image' as const,
-    authorName: 'Marine Explorer',
-    createdAt: '2023-05-15T09:00:00Z',
-    category: 'Diving',
-    locationName: 'Coral Bay'
-  },
-  {
-    id: '2',
-    title: 'The Ancient Roman Ruins of Tabarka',
-    excerpt: `Walk through history as you explore the well-preserved Roman ruins that tell the story of Tabarka's rich historical past.`,
-    mediaUrl: 'https://images.unsplash.com/photo-1555993539-1732b0258235',
-    mediaType: 'image' as const,
-    authorName: 'History Buff',
-    createdAt: '2023-06-22T14:30:00Z',
-    category: 'History',
-    locationName: 'Ruins of Bulla Regia'
-  },
-  {
-    id: '3',
-    title: "A Local's Guide to Tabarka's Best Beaches",
-    excerpt: "Discover the hidden gems of Tabarka's coastline with insider tips on the most beautiful and secluded beaches to visit.",
-    mediaUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-    mediaType: 'image' as const,
-    authorName: 'Beach Lover',
-    createdAt: '2023-07-10T11:15:00Z',
-    category: 'Beaches',
-    locationName: 'Golden Beach'
-  }
-];
+import { contentService } from '@/lib/services/contentService';
 
 // Animation variants
 const fadeIn: Variants = {
@@ -100,9 +64,60 @@ const AnimatedContainer = ({
   );
 };
 
+// Type for formatted post data to use in PostCard
+interface FormattedPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video' | 'text';
+  authorName: string;
+  createdAt: string;
+  category: string;
+  locationName?: string;
+}
+
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [featuredPosts, setFeaturedPosts] = useState<FormattedPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    const fetchFeaturedPosts = async () => {
+      try {
+        setIsLoading(true);
+        // Get featured content from Supabase
+        const { content } = await contentService.getContent(1, 3, {
+          featured: true,
+          status: 'published'
+        });
+        
+        // Format the posts for display
+        const formattedPosts = content.map((post: any) => ({
+          id: post.id,
+          title: post.title,
+          excerpt: post.excerpt || 'Experience Tabarka with this amazing activity',
+          mediaUrl: post.media_url || 'https://images.unsplash.com/photo-1546026423-cc4642628d2b',
+          mediaType: post.media_type,
+          authorName: post.users?.full_name || 'Anonymous',
+          createdAt: post.created_at,
+          category: post.categories?.name || 'Uncategorized',
+          locationName: post.location_id ? 'Tabarka' : undefined
+        }));
+        
+        setFeaturedPosts(formattedPosts);
+      } catch (error) {
+        console.error('Error fetching featured posts:', error);
+        // Set some fallback data if the fetch fails
+        setFeaturedPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchFeaturedPosts();
+  }, []);
+
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
   };
@@ -145,19 +160,39 @@ export default function Home() {
           </AnimatedContainer>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredPosts.map((post, index) => (
-              <motion.div 
-                key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.5,
-                  delay: index * 0.1 + 0.2
-                }}
-              >
-                <PostCard {...post} />
-              </motion.div>
-            ))}
+            {isLoading ? (
+              // Loading skeletons
+              [...Array(3)].map((_, index) => (
+                <div key={index} className="bg-card rounded-lg shadow-md p-4 animate-pulse">
+                  <div className="w-full h-48 bg-muted rounded-md mb-4"></div>
+                  <div className="h-6 bg-muted rounded-md w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded-md w-full mb-2"></div>
+                  <div className="h-4 bg-muted rounded-md w-5/6 mb-4"></div>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-muted rounded-full mr-2"></div>
+                    <div className="h-4 bg-muted rounded-md w-1/3"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredPosts.length > 0 ? (
+              featuredPosts.map((post, index) => (
+                <motion.div 
+                  key={post.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.5,
+                    delay: index * 0.1 + 0.2
+                  }}
+                >
+                  <PostCard {...post} />
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-10">
+                <p className="text-muted-foreground">No featured content available at the moment.</p>
+              </div>
+            )}
           </div>
           
           <AnimatedContainer
@@ -170,7 +205,7 @@ export default function Home() {
               asChild
               className="group"
             >
-              <Link href="/explore" className="inline-flex items-center">
+              <Link href="/blog" className="inline-flex items-center">
                 View All Experiences
                 <svg className="ml-2 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />

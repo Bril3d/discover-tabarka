@@ -4,7 +4,23 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { blogPosts } from './data';
+import { contentService } from '@/lib/services/contentService';
+
+// Convert database posts to blog post format
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  publishedAt: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  category: string;
+  readTime: number;
+}
 
 // Available blog categories
 const categories = [
@@ -19,10 +35,61 @@ const categories = [
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredPosts, setFilteredPosts] = useState(blogPosts);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch posts from Supabase
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setIsLoading(true);
+        const { content } = await contentService.getContent(1, 20, {
+          type: 'post',
+          status: 'published'
+        });
+        
+        // Convert content to BlogPost format
+        const formattedPosts: BlogPost[] = content.map((post: any) => {
+          // Calculate read time based on content length (approx 200 words per minute)
+          const wordCount = post.content ? post.content.split(/\s+/).length : 0;
+          const readTime = Math.max(1, Math.ceil(wordCount / 200));
+          
+          return {
+            id: post.id,
+            title: post.title,
+            excerpt: post.excerpt || 'Read more about this interesting topic...',
+            content: post.content || '',
+            coverImage: post.media_url || 'https://images.unsplash.com/photo-1617624085810-3df2165bd11b',
+            publishedAt: post.published_at || post.created_at,
+            author: {
+              name: post.users?.full_name || 'Anonymous Author',
+              avatar: post.users?.avatar_url || 'https://randomuser.me/api/portraits/people/1.jpg'
+            },
+            category: post.categories?.name || 'Uncategorized',
+            readTime: readTime
+          };
+        });
+        
+        setBlogPosts(formattedPosts);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        setBlogPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPosts();
+  }, []);
 
   // Filter posts based on category and search query
   useEffect(() => {
+    if (blogPosts.length === 0) {
+      setFilteredPosts([]);
+      return;
+    }
+    
     let filtered = blogPosts;
     
     // Filter by category
@@ -43,7 +110,7 @@ export default function BlogPage() {
     }
     
     setFilteredPosts(filtered);
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, blogPosts]);
 
   // Format date to readable string
   const formatDate = (dateString: string) => {
@@ -71,6 +138,74 @@ export default function BlogPage() {
     }
   };
 
+  // Loading UI
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto">
+          {/* Hero Section Skeleton */}
+          <div className="text-center mb-16 animate-pulse">
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 max-w-md mx-auto"></div>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 max-w-2xl mx-auto"></div>
+          </div>
+          
+          {/* Featured Post Skeleton */}
+          <div className="mb-16 animate-pulse">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="h-80 bg-gray-200 dark:bg-gray-700"></div>
+                <div className="p-6 md:p-8">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md mb-2 w-full"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md mb-6 w-5/6"></div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 mr-3"></div>
+                      <div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-24 mb-1"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-md w-32"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Filter Skeleton */}
+          <div className="mb-12 animate-pulse">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-md w-full"></div>
+                </div>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="h-8 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Posts Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-md mb-2 w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md mb-4 w-full"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-md w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-7xl mx-auto">
@@ -89,69 +224,71 @@ export default function BlogPage() {
           </p>
         </motion.div>
 
-        {/* Featured Post */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-16"
-        >
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              <div className="relative h-80 lg:h-auto">
-                <Image
-                  src={blogPosts[0].coverImage}
-                  alt={blogPosts[0].title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </div>
-              <div className="p-6 md:p-8 flex flex-col justify-center">
-                <div className="mb-3">
-                  <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-tabarka-blue-100 dark:bg-tabarka-blue-900/40 text-tabarka-blue-800 dark:text-tabarka-blue-300">
-                    {blogPosts[0].category}
-                  </span>
+        {/* Featured Post - show first post if available */}
+        {filteredPosts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-16"
+          >
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="relative h-80 lg:h-auto">
+                  <Image
+                    src={filteredPosts[0].coverImage}
+                    alt={filteredPosts[0].title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                  {blogPosts[0].title}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  {blogPosts[0].excerpt}
-                </p>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                      <Image
-                        src={blogPosts[0].author.avatar}
-                        alt={blogPosts[0].author.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {blogPosts[0].author.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(blogPosts[0].publishedAt)} · {blogPosts[0].readTime} min read
-                      </p>
-                    </div>
+                <div className="p-6 md:p-8 flex flex-col justify-center">
+                  <div className="mb-3">
+                    <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-tabarka-blue-100 dark:bg-tabarka-blue-900/40 text-tabarka-blue-800 dark:text-tabarka-blue-300">
+                      {filteredPosts[0].category}
+                    </span>
                   </div>
-                  <Link
-                    href={`/blog/${blogPosts[0].id}`}
-                    className="inline-flex items-center text-tabarka-blue-600 dark:text-tabarka-blue-400 font-medium hover:text-tabarka-blue-800 dark:hover:text-tabarka-blue-300 transition-colors"
-                  >
-                    Read more
-                    <svg className="ml-1 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                    {filteredPosts[0].title}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    {filteredPosts[0].excerpt}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
+                        <Image
+                          src={filteredPosts[0].author.avatar}
+                          alt={filteredPosts[0].author.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {filteredPosts[0].author.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(filteredPosts[0].publishedAt)} · {filteredPosts[0].readTime} min read
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/blog/${filteredPosts[0].id}`}
+                      className="inline-flex items-center text-tabarka-blue-600 dark:text-tabarka-blue-400 font-medium hover:text-tabarka-blue-800 dark:hover:text-tabarka-blue-300 transition-colors"
+                    >
+                      Read more
+                      <svg className="ml-1 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Search and Filter */}
         <motion.div

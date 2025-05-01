@@ -5,24 +5,118 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { contentService } from '@/lib/services/contentService';
 
-// Import the mock data (in a real app, this would be fetched from Supabase)
-import { blogPosts } from '../data';
+// Convert database post to blog post format
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  publishedAt: string;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  category: string;
+  readTime: number;
+}
 
 export default function BlogPostPage() {
   const { id } = useParams();
-  const [post, setPost] = useState(blogPosts.find(post => post.id === id) || null);
-  const [relatedPosts, setRelatedPosts] = useState(blogPosts.filter(p => p.id !== id).slice(0, 3));
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // In a real app, we would fetch the post from Supabase based on the ID
+  // Fetch the post from Supabase based on the ID
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    const fetchPost = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch the current post
+        const postData = await contentService.getContentById(id as string);
+        
+        if (!postData) {
+          setError('Post not found');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Calculate read time based on content length (approx 200 words per minute)
+        const wordCount = postData.content ? postData.content.split(/\s+/).length : 0;
+        const readTime = Math.max(1, Math.ceil(wordCount / 200));
+        
+        // Format the post for display
+        const formattedPost: BlogPost = {
+          id: postData.id,
+          title: postData.title,
+          excerpt: postData.excerpt || 'Read more about this interesting topic...',
+          content: postData.content || '',
+          coverImage: postData.media_url || 'https://images.unsplash.com/photo-1617624085810-3df2165bd11b',
+          publishedAt: postData.published_at || postData.created_at,
+          author: {
+            name: postData.users?.full_name || 'Anonymous Author',
+            avatar: postData.users?.avatar_url || 'https://randomuser.me/api/portraits/people/1.jpg'
+          },
+          category: postData.categories?.name || 'Uncategorized',
+          readTime: readTime
+        };
+        
+        setPost(formattedPost);
+        
+        // Fetch related posts (same category)
+        const { content } = await contentService.getContent(1, 3, {
+          type: 'post',
+          status: 'published',
+          category: postData.category_id
+        });
+        
+        // Filter out the current post and format related posts
+        const formattedRelatedPosts = content
+          .filter((relatedPost: any) => relatedPost.id !== id)
+          .slice(0, 3)
+          .map((relatedPost: any) => {
+            const relatedReadTime = relatedPost.content ? 
+              Math.max(1, Math.ceil(relatedPost.content.split(/\s+/).length / 200)) : 
+              3;
+              
+            return {
+              id: relatedPost.id,
+              title: relatedPost.title,
+              excerpt: relatedPost.excerpt || 'Read more about this interesting topic...',
+              content: relatedPost.content || '',
+              coverImage: relatedPost.media_url || 'https://images.unsplash.com/photo-1617624085810-3df2165bd11b',
+              publishedAt: relatedPost.published_at || relatedPost.created_at,
+              author: {
+                name: relatedPost.users?.full_name || 'Anonymous Author',
+                avatar: relatedPost.users?.avatar_url || 'https://randomuser.me/api/portraits/people/1.jpg'
+              },
+              category: relatedPost.categories?.name || 'Uncategorized',
+              readTime: relatedReadTime
+            };
+          });
+        
+        setRelatedPosts(formattedRelatedPosts);
+        
+        // Increment view count for analytics
+        if (postData.id) {
+          contentService.incrementViews(postData.id);
+        }
+      } catch (err) {
+        console.error('Error fetching blog post:', err);
+        setError('Failed to load post');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchPost();
+    }
   }, [id]);
 
   // Format date to readable string
@@ -50,13 +144,13 @@ export default function BlogPostPage() {
     );
   }
 
-  if (!post) {
+  if (error || !post) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Post Not Found</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-8">
-            The blog post you're looking for doesn't exist or has been removed.
+            {error || "The blog post you're looking for doesn't exist or has been removed."}
           </p>
           <Link 
             href="/blog"
